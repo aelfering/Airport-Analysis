@@ -40,6 +40,7 @@ eppley.graph <- ggplot(passengers, aes(x = Year, y = Chg.2000*100)) +
   geom_curve(aes(x = 2015, y = 27, xend = 2017.5, yend = 33), 
              colour = "#555555", size=0.5, curvature = -0.2, arrow = arrow(length = unit(0.01, "npc")))
 
+# Export the plot
 finalise_plot(plot_name = eppley.graph,
               source = "Visual by Alex Elfering | Source: Eppley Airfield",
               save_filepath = "Eppley_Passengers.png",
