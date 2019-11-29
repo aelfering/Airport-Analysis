@@ -8,6 +8,9 @@ library(ggplot2, warn.conflicts = FALSE)
 library(magrittr, warn.conflicts = FALSE)
 library(bbplot, warn.conflicts = FALSE)
 library(reshape2, warn.conflicts = FALSE)
+library(egg, warn.conflicts = FALSE)
+
+options(scipen = 999)
 
 # Data load and remove NA values -----------------
 market_delays <- list.files("/Users/alexelfering/Desktop/FlightDelays", pattern = "*.csv", full.names = TRUE)
@@ -77,14 +80,43 @@ delays.reasons <- omadf %>%
          CARRIER_DELAY) %>%
   group_by(YEAR, 
            MONTH) %>%
-  summarise(Weather.Delay = sum(WEATHER_DELAY),
+  summarise(All.Delay.Minutes = sum(WEATHER_DELAY) + sum(LATE_AIRCRAFT_DELAY) + sum(SECURITY_DELAY) + sum(NAS_DELAY) + sum(CARRIER_DELAY),
+            Weather.Delay = sum(WEATHER_DELAY),
             Late.Aircraft.Delay = sum(LATE_AIRCRAFT_DELAY),
             Security.Delay = sum(SECURITY_DELAY),
             NAS.Delay = sum(NAS_DELAY),
             Carrier.Delay = sum(CARRIER_DELAY))
 
 delays.19.reasons <- delays.reasons %>%
-  filter(YEAR == 2019)
+  filter(YEAR == 2019) %>%
+  group_by(YEAR) %>%
+  summarise(All.Minutes = sum(All.Delay.Minutes),
+            Weather = sum(Weather.Delay),
+            Late.Aircraft = sum(Late.Aircraft.Delay),
+            Security = sum(Security.Delay),
+            NAS = sum(NAS.Delay),
+            Carrier = sum(Carrier.Delay)) %>%
+  ungroup() %>%
+  mutate(Weather = Weather/All.Minutes,
+         Late.Aircraft = Late.Aircraft/All.Minutes,
+         Security = Security/All.Minutes,
+         NAS = NAS/All.Minutes,
+         Carrier = Carrier/All.Minutes) %>%
+  select(Weather,Late.Aircraft, Security, NAS, Carrier)
+
+delays.19 <- melt(delays.19.reasons)
+
+ggplot(delays.19, aes(x = reorder(variable, value), y = value*100, label = scales::percent(value))) +
+  geom_bar(stat="identity", 
+           position="identity", 
+           fill="#1380A1") +
+  geom_hline(yintercept = 0, size = 1, colour="#333333") +
+  scale_y_continuous(labels = function(x) paste0(x, "%")) +
+  geom_text(position = position_dodge(width = 1), size = 5, hjust = -0.1) +
+  bbc_style() +
+  coord_flip() +
+  labs(title="Percent of Delays by Reason",
+       subtitle = "For Omaha Eppley Airfield YTD 2019")
 
 delays.18.reasons <- delays.reasons %>%
   filter(YEAR == 2018)
@@ -93,42 +125,7 @@ delays.ytd.reasons <- left_join(delays.19.reasons,
                         delays.18.reasons,
                         by = c('MONTH' = 'MONTH')) #  left joining compares ytd
 
-# final stats
-final.stats.reasons <- delays.ytd.reasons %>%
-  select(YEAR = YEAR.x, 
-         Weather19 = Weather.Delay.x, 
-         Late.Aircraft19 = Late.Aircraft.Delay.x,
-         Security19 = Security.Delay.x,
-         NAS19 = NAS.Delay.x,
-         Carrier19 = Carrier.Delay.x,
-         Weather18 = Weather.Delay.y, 
-         Late.Aircraft18 = Late.Aircraft.Delay.y,
-         Security18 = Security.Delay.y,
-         NAS18 = NAS.Delay.y,
-         Carrier18 = Carrier.Delay.y) %>%
-  group_by(YEAR) %>%
-  summarise(Weather19 = sum(Weather19),
-            Late.Aircraft19 = sum(Late.Aircraft19),
-            Security19 = sum(Security19),
-            NAS19 = sum(NAS19),
-            Carrier19 = sum(Carrier19),
-            Weather18 = sum(Weather18),
-            Late.Aircraft18 = sum(Late.Aircraft18),
-            Security18 = sum(Security18),
-            NAS18 = sum(NAS18),
-            Carrier18 = sum(Carrier18)) %>%
-  mutate(Weather = (Weather19 - Weather18)/Weather18,
-         Late.Aircraft = (Late.Aircraft19 - Late.Aircraft18)/Late.Aircraft18,
-         NAS = (NAS19 - NAS18)/NAS18,
-         Carrier = (Carrier19 - Carrier18)/Carrier18,
-         Security = (Security19 - Security18)/Security18)%>%
-  select(Weather,
-         Late.Aircraft,
-         NAS,
-         Carrier,
-         Security)
 
-final.stats.graph <- final.stats.reasons 
 
 # What is the biggest source of delays? ------------------------------------------------------------------
 
@@ -171,24 +168,29 @@ delay_count <- market %>%
 delay_minutes <- market %>%
   filter(ORIGIN == 'OMA', CANCELLED != 1) %>%
   group_by(YEAR, MONTH) %>%
-  summarise(Total_Minutes = sum(WEATHER_DELAY) + sum(NAS_DELAY) + sum(CARRIER_DELAY) + sum(LATE_AIRCRAFT_DELAY),
+  summarise(Total_Minutes = sum(WEATHER_DELAY) + sum(NAS_DELAY) + sum(CARRIER_DELAY) + sum(LATE_AIRCRAFT_DELAY) + sum(SECURITY_DELAY),
             Weather_Delays = sum(WEATHER_DELAY),
+            Security_Delays = sum(SECURITY_DELAY),
             NAS_Delays = sum(NAS_DELAY),
             Carrier_Delays = sum(CARRIER_DELAY),
             Aircraft_Delays = sum(LATE_AIRCRAFT_DELAY)) %>%
   ungroup() %>%
   mutate(Year.Month = paste(YEAR, MONTH, sep = ' - '),
+         Percent.Security = Security_Delays/Total_Minutes,
          Percent.Weather = Weather_Delays/Total_Minutes,
          Percent.NAS = NAS_Delays/Total_Minutes,
          Percent.Carrier = Carrier_Delays/Total_Minutes,
          Percent.Aircraft = Aircraft_Delays/Total_Minutes) %>%
-  select(Year.Month,
-         Total_Minutes,
+  select(Total_Minutes,
+         Percent.Security,
          Percent.Weather,
          Percent.NAS,
          Percent.Carrier,
          Percent.Aircraft) %>%
   as.data.frame()
+
+
+
 
 
 
