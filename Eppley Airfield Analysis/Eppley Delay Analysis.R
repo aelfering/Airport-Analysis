@@ -106,7 +106,7 @@ delays.19.reasons <- delays.reasons %>%
 
 delays.19 <- melt(delays.19.reasons)
 
-ggplot(delays.19, aes(x = reorder(variable, value), y = value*100, label = scales::percent(value))) +
+graph.19 <- ggplot(delays.19, aes(x = reorder(variable, value), y = value*100, label = scales::percent(value))) +
   geom_bar(stat="identity", 
            position="identity", 
            fill="#1380A1") +
@@ -118,38 +118,11 @@ ggplot(delays.19, aes(x = reorder(variable, value), y = value*100, label = scale
   labs(title="Percent of Delays by Reason",
        subtitle = "For Omaha Eppley Airfield YTD 2019")
 
-delays.18.reasons <- delays.reasons %>%
-  filter(YEAR == 2018) %>%
-  group_by(YEAR) %>%
-  summarise(All.Minutes = sum(All.Delay.Minutes),
-            Weather = sum(Weather.Delay),
-            Late.Aircraft = sum(Late.Aircraft.Delay),
-            Security = sum(Security.Delay),
-            NAS = sum(NAS.Delay),
-            Carrier = sum(Carrier.Delay)) %>%
-  ungroup() %>%
-  mutate(Weather = Weather/All.Minutes,
-         Late.Aircraft = Late.Aircraft/All.Minutes,
-         Security = Security/All.Minutes,
-         NAS = NAS/All.Minutes,
-         Carrier = Carrier/All.Minutes) %>%
-  select(Weather,Late.Aircraft, Security, NAS, Carrier)
-
-delays.18 <- melt(delays.18.reasons)
-
-ggplot(delays.18, aes(x = reorder(variable, value), y = value*100, label = scales::percent(value))) +
-  geom_bar(stat="identity", 
-           position="identity", 
-           fill="#1380A1") +
-  geom_hline(yintercept = 0, size = 1, colour="#333333") +
-  scale_y_continuous(labels = function(x) paste0(x, "%")) +
-  geom_text(position = position_dodge(width = 1), size = 5, hjust = -0.1) +
-  bbc_style() +
-  coord_flip() +
-  labs(title="Percent of Delays by Reason",
-       subtitle = "For Omaha Eppley Airfield YTD 2018")
-
-
+finalise_plot(plot_name = graph.19,
+              source = "Visual by Alex Elfering | Source: Eppley Airfield",
+              save_filepath = "Eppley_Passengers.png",
+              width_pixels = 1140,
+              height_pixels = 550)
 
 # What is the biggest source of delays? ------------------------------------------------------------------
 
