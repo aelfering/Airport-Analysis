@@ -18,6 +18,8 @@ market <- rbindlist(lapply(market_delays, fread))
 
 market[is.na(market)] <- 0
 
+market <- as.data.frame(market)
+
 # Create a standard dataframe with Eppley Airfield ------------------------------------------------------------------
 omadf <- market %>%
   filter(ORIGIN == 'OMA', CANCELLED != 1, DIVERTED != 1)
@@ -27,12 +29,12 @@ delays <- omadf %>%
          MONTH, 
          DEP_DEL15, 
          FLIGHTS, 
-         DEP_DELAY) %>%
+         DEP_DELAY_NEW) %>%
   group_by(YEAR, 
            MONTH) %>%
   summarise(Delays = sum(DEP_DEL15),
             Flights = sum(FLIGHTS),
-            Delay.Minutes = sum(DEP_DELAY))
+            Delay.Minutes = sum(DEP_DELAY_NEW))
 
 delays.19 <- delays %>%
   filter(YEAR == 2019)
@@ -125,69 +127,30 @@ finalise_plot(plot_name = graph.19,
               height_pixels = 550)
 
 # What is the biggest source of delays? ------------------------------------------------------------------
-
-origin <- market %>%
-  filter(ORIGIN == 'OMA', CANCELLED != 1) %>%
-  group_by(YEAR, MONTH) %>%
-  summarise(Delays = sum(DEP_DEL15), 
-            Flights = sum(FLIGHTS)) %>%
-  ungroup() %>%
-  as.data.frame ()
-
-delay_count <- market %>%
-  filter(ORIGIN == 'OMA', CANCELLED != 1) %>%
-  mutate(Weather_Delays = ifelse(WEATHER_DELAY > 0, 1, 0),
-         Carrier_Delays = ifelse(CARRIER_DELAY > 0, 1, 0),
-         NAS_Delays = ifelse(NAS_DELAY > 0, 1, 0),
-         Aircraft_Delays = ifelse(LATE_AIRCRAFT_DELAY > 0, 1, 0)) %>%
-  group_by(YEAR, MONTH, DAY_OF_MONTH, DAY_OF_WEEK) %>%
-  summarise(Total_Delays = sum(Weather_Delays) + sum(Carrier_Delays) + sum(NAS_Delays) + sum(Aircraft_Delays),
-            Weather_Delays = sum(Weather_Delays),
-            Carrier_Delays = sum(Carrier_Delays),
-            NAS_Delays = sum(NAS_Delays),
-            Aircraft_Delays = sum(Aircraft_Delays)) %>%
-  ungroup() %>%
-  mutate(Percent.Weather = Weather_Delays/Total_Delays,
-         Percent.Carrier = Carrier_Delays/Total_Delays,
-         Percent.NAS = NAS_Delays/Total_Delays,
-         Percent.Aircraft = NAS_Delays/Total_Delays) %>%
+carrier.delays <- omadf %>%
   select(YEAR, 
-         MONTH,
-         DAY_OF_MONTH,
-         DAY_OF_WEEK,
-         Total_Delays,
-         Percent.Weather, 
-         Percent.Carrier, 
-         Percent.NAS, 
-         Percent.Aircraft) %>%
-  as.data.frame()
+         MONTH, 
+         MKT_UNIQUE_CARRIER,
+         DEP_DEL15, 
+         FLIGHTS, 
+         DEP_DELAY_NEW) %>%
+  group_by(YEAR, 
+           MONTH, 
+           MKT_UNIQUE_CARRIER) %>%
+  summarise(Delays = sum(DEP_DEL15),
+            Flights = sum(FLIGHTS),
+            Delay.Minutes = sum(DEP_DELAY_NEW))
+  
+carrier.18 <- subset(carrier.delays, carrier.delays$YEAR == 2018)
+carrier.19 <- subset(carrier.delays, carrier.delays$YEAR == 2019)
 
-delay_minutes <- market %>%
-  filter(ORIGIN == 'OMA', CANCELLED != 1) %>%
-  group_by(YEAR, MONTH) %>%
-  summarise(Total_Minutes = sum(WEATHER_DELAY) + sum(NAS_DELAY) + sum(CARRIER_DELAY) + sum(LATE_AIRCRAFT_DELAY) + sum(SECURITY_DELAY),
-            Weather_Delays = sum(WEATHER_DELAY),
-            Security_Delays = sum(SECURITY_DELAY),
-            NAS_Delays = sum(NAS_DELAY),
-            Carrier_Delays = sum(CARRIER_DELAY),
-            Aircraft_Delays = sum(LATE_AIRCRAFT_DELAY)) %>%
-  ungroup() %>%
-  mutate(Year.Month = paste(YEAR, MONTH, sep = ' - '),
-         Percent.Security = Security_Delays/Total_Minutes,
-         Percent.Weather = Weather_Delays/Total_Minutes,
-         Percent.NAS = NAS_Delays/Total_Minutes,
-         Percent.Carrier = Carrier_Delays/Total_Minutes,
-         Percent.Aircraft = Aircraft_Delays/Total_Minutes) %>%
-  select(Total_Minutes,
-         Percent.Security,
-         Percent.Weather,
-         Percent.NAS,
-         Percent.Carrier,
-         Percent.Aircraft) %>%
-  as.data.frame()
+carrier <- left_join(carrier.19, carrier.18, by = c('MONTH' = 'MONTH', 'MKT_UNIQUE_CARRIER' = 'MKT_UNIQUE_CARRIER'))
 
-
-
+carrier %>%
+  group_by(MKT_UNIQUE_CARRIER) %>%
+  summarise(Delay19 = sum(Delay.Minutes.x),
+            Delay18 = sum(Delay.Minutes.y)) %>%
+  mutate(Pct.Chg = (Delay19-Delay18)/Delay18)
 
 
 
