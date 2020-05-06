@@ -1,7 +1,7 @@
 # EPPLEY AIRFIELD ANALYSIS
 # Script written by Alex Elfering
 
-# LOADING THE LIBRARIES
+#### LOADING THE LIBRARIES ####
 library(lubridate)
 library(dplyr)
 library(tidyr)
@@ -17,7 +17,7 @@ library(stringr)
 
 options(scipen = 999)
 
-####  LOADING THE DATA AND FILTERING FOR MEMPHIS ####
+####  LOADING THE DATA AND FILTERING FOR OMAHA ####
 db1ba <- list.files("/Users/alexelfering/Desktop/DB1BA/market", pattern = "*.csv", full.names = TRUE)
 db1badf <- rbindlist(lapply(db1ba, fread))
 
