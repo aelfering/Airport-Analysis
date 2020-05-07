@@ -21,9 +21,169 @@ options(scipen = 999)
 db1ba <- list.files("/Users/alexelfering/Desktop/DB1BA/market", pattern = "*.csv", full.names = TRUE)
 db1badf <- rbindlist(lapply(db1ba, fread))
 
-oma_db <- subset(db1badf, ORIGIN == 'OMA')
+oma_db <- subset(db1badf, ORIGIN == 'OMA' & YEAR >= 1999)
 
 head(oma_db)
+
+####  What is the market share among US Airlines? ####
+reporting_carrier_share <- oma_db %>%
+  group_by(YEAR, 
+           TICKET_CARRIER) %>%
+  summarise(PAX = sum(PASSENGERS)) %>%
+  ungroup() %>%
+  group_by(YEAR) %>%
+  mutate(YEARLY_PAX = sum(PAX)) %>%
+  ungroup() %>%
+  mutate(MKT_SHARE = PAX/YEARLY_PAX)
+
+top_carrier <- reporting_carrier_share %>%
+  filter(YEAR == max(YEAR)) %>%
+  mutate(CARRIER_RANK = dense_rank(desc(PAX))) %>%
+  filter(CARRIER_RANK <= 10) %>%
+  filter(MKT_SHARE > 0.01)
+
+top_carrier_names <- as.character(top_carrier$TICKET_CARRIER)
+
+ggplot(reporting_carrier_share,
+       aes(x = YEAR,
+           y = MKT_SHARE,
+           group = TICKET_CARRIER)) +
+  geom_hline(yintercept = 0,
+             linetype = 'dashed') +
+  geom_line(color = 'gray',
+            size = 1,
+            alpha = 0.6) +
+  geom_line(data = subset(reporting_carrier_share, TICKET_CARRIER %in% top_carrier_names),
+            mapping = aes(x = YEAR,
+                          y = MKT_SHARE,
+                          group = TICKET_CARRIER,
+                          color = TICKET_CARRIER),
+            size = 1) +
+  scale_y_continuous(labels = scales::percent) +
+  labs(title = 'Market Share Among Airlines at Eppley Airfield',
+       caption = 'Visualization by Alex Elfering\nSource: DB1A & DB1B',
+       y = 'Market Share',
+       x = 'Year',
+       color = 'Airline') +
+  theme(legend.position = 'top')
+
+####   What is the most popular final destination? ####
+cy_final_dest <- oma_db %>%
+  filter(YEAR == max(YEAR)) %>%
+  group_by(YEAR,
+           DEST) %>%
+  summarise(PAX = sum(PASSENGERS)) %>%
+  ungroup() %>%
+  group_by(YEAR) %>%
+  mutate(YEARLY_PAX = sum(PAX)) %>%
+  ungroup() %>%
+  mutate(MKT_SHARE = PAX/YEARLY_PAX) %>%
+  select(YEAR,
+         DEST,
+         MKT_SHARE) %>%
+  arrange(desc(MKT_SHARE)) %>%
+  filter(row_number() <= 10)
+
+py_top_dest <- oma_db %>%
+  filter(YEAR == max(YEAR)-10) %>%
+  group_by(YEAR,
+           DEST) %>%
+  summarise(PAX = sum(PASSENGERS)) %>%
+  ungroup() %>%
+  group_by(YEAR) %>%
+  mutate(YEARLY_PAX = sum(PAX)) %>%
+  ungroup() %>%
+  mutate(MKT_SHARE = PAX/YEARLY_PAX) %>%
+  select(YEAR,
+         DEST,
+         MKT_SHARE) %>%
+  arrange(desc(MKT_SHARE)) 
+
+ggplot(cy_final_dest,
+       aes(x = reorder(DEST, MKT_SHARE),
+           y = MKT_SHARE)) +
+  coord_flip() +
+  geom_bar(stat = 'identity',
+           position = 'identity') +
+  scale_y_continuous(labels = scales::percent) +
+  geom_hline(yintercept = 0) +
+  labs(title = 'Denver, Phoenix, and Las Vegas remain Popular Destinations',
+       subtitle = 'Market Share of Passengers in 2019',
+       y = 'Market Share',
+       x = '',
+       caption = 'Visualization by Alex Elfering\nSource: DB1B\nIncludes Passengers Traveling Non-Stop and Connecting')
+
+# This view includes passengers who are travling either non-stop OR connecting
+# What about the most popular non-stop destinations?
+# This may be skewed by airlines who allow passengers to not change planes, and they continnue onward to their final destination
+non_stop <- oma_db %>%
+  filter(TICKET_CARRIER != '99') %>%
+  mutate(AIRPORT_GROUP = gsub('\\:', ' ', AIRPORT_GROUP)) %>%
+  mutate(TOTAL_CONNECTIONS = sapply(strsplit(AIRPORT_GROUP, " "), length)-2) %>%
+  group_by(YEAR) %>%
+  mutate(YEARLY_PAX = sum(PASSENGERS)) %>%
+  ungroup() %>%
+  filter(YEAR == max(YEAR),
+         TOTAL_CONNECTIONS == 0) %>%
+  group_by(YEAR,
+           DEST) %>%
+  summarise(PAX = sum(PASSENGERS)) %>%
+  ungroup() %>%
+  group_by(YEAR) %>%
+  mutate(YEARLY_PAX = sum(PAX)) %>%
+  ungroup() %>%
+  mutate(MKT_SHARE = PAX/YEARLY_PAX) %>%
+  arrange(desc(MKT_SHARE)) %>%
+  filter(row_number() <= 10)
+
+ggplot(non_stop,
+       aes(x = reorder(DEST, MKT_SHARE),
+           y = MKT_SHARE)) +
+  coord_flip() +
+  geom_bar(stat = 'identity',
+           position = 'identity') +
+  scale_y_continuous(labels = scales::percent) +
+  geom_hline(yintercept = 0) +
+  labs(title = 'Denver, Phoenix, and Las Vegas remain Popular Destinations',
+       subtitle = 'Market Share of Passengers in 2019',
+       y = 'Market Share',
+       x = '',
+       caption = 'Visualization by Alex Elfering\nSource: DB1B\nIncludes Passengers Traveling Non-Stop and Connecting')
+
+# What about popular destinations where passengers had to connect?
+multi_stop <- oma_db %>%
+  filter(TICKET_CARRIER != '99') %>%
+  mutate(AIRPORT_GROUP = gsub('\\:', ' ', AIRPORT_GROUP)) %>%
+  mutate(TOTAL_CONNECTIONS = sapply(strsplit(AIRPORT_GROUP, " "), length)-2) %>%
+  group_by(YEAR) %>%
+  mutate(YEARLY_PAX = sum(PASSENGERS)) %>%
+  ungroup() %>%
+  filter(YEAR == max(YEAR),
+         TOTAL_CONNECTIONS != 0) %>%
+  group_by(YEAR,
+           DEST) %>%
+  summarise(PAX = sum(PASSENGERS)) %>%
+  ungroup() %>%
+  group_by(YEAR) %>%
+  mutate(YEARLY_PAX = sum(PAX)) %>%
+  ungroup() %>%
+  mutate(MKT_SHARE = PAX/YEARLY_PAX) %>%
+  arrange(desc(MKT_SHARE)) %>%
+  filter(row_number() <= 10)
+  
+ggplot(multi_stop,
+       aes(x = reorder(DEST, MKT_SHARE),
+           y = MKT_SHARE)) +
+  coord_flip() +
+  geom_bar(stat = 'identity',
+           position = 'identity') +
+  scale_y_continuous(labels = scales::percent) +
+  geom_hline(yintercept = 0) +
+  labs(title = 'Denver, Phoenix, and Las Vegas remain Popular Destinations',
+       subtitle = 'Market Share of Passengers in 2019',
+       y = 'Market Share',
+       x = '',
+       caption = 'Visualization by Alex Elfering\nSource: DB1B\nIncludes Passengers Traveling Non-Stop and Connecting')
 
 ####  Are more customers traveling non-stop, or connecting? ####
 connection_movement <- oma_db %>%
@@ -261,3 +421,48 @@ ggplot(subset(reporting_carrier_share, TICKET_CARRIER %in% top_carrier_names),
   
   
   
+
+
+# Which airports are more popular as a final destination, or as a connecting point?
+connection_1 <- oma_db %>%
+  mutate(AIRPORT_GROUP = gsub('\\:', ' ', AIRPORT_GROUP)) %>%
+  mutate(TOTAL_CONNECTIONS = sapply(strsplit(AIRPORT_GROUP, " "), length)-2) %>%
+  filter(TOTAL_CONNECTIONS == 1) %>%
+  mutate(CONNECTING_AIRPORT = word(AIRPORT_GROUP, 2)) %>%
+  group_by(YEAR,
+           CONNECTING_AIRPORT) %>%
+  summarise(PASSENGERS = sum(PASSENGERS))
+
+final_conn_airport <- inner_join(dest_pax, connection_1, by = c('YEAR' = 'YEAR', 'FINAL_DEST' = 'CONNECTING_AIRPORT'))
+
+pct_conn_final <- final_conn_airport %>%
+  select(YEAR,
+         AIRPORT = FINAL_DEST,
+         CONNECTING_PAX = PASSENGERS,
+         FINAL_DEST_PAX = PAX) %>%
+  mutate(TOTAL_PAX = CONNECTING_PAX + FINAL_DEST_PAX) %>%
+  group_by(YEAR) %>%
+  mutate(YEARLY_TOTAL = sum(TOTAL_PAX)) %>%
+  ungroup() %>%
+  filter(TOTAL_PAX/YEARLY_TOTAL >= 0.01) %>%
+  select(YEAR,
+         AIRPORT,
+         CONNECTING_PAX,
+         FINAL_DEST_PAX,
+         TOTAL_PAX) %>%
+  mutate(PCT_CONN = CONNECTING_PAX/TOTAL_PAX,
+         PCT_FINAL = FINAL_DEST_PAX/TOTAL_PAX) %>%
+  filter(PCT_CONN >= 0.01) 
+
+ggplot(pct_conn_final,
+       aes(x = YEAR,
+           y = PCT_CONN,
+           group = AIRPORT)) +
+  geom_line(#size = 1,
+            color = 'blue') +
+  geom_line(data = pct_conn_final,
+            mapping = aes(x = YEAR,
+                          y = PCT_FINAL,
+                          group = AIRPORT),
+            color = 'orange') +
+  facet_wrap(~AIRPORT)
