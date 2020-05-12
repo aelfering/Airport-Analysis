@@ -128,7 +128,30 @@ ggplot(con_non_mkt_share,
            y = MKT_SHARE)) +
   coord_flip() +
   geom_bar(stat = 'identity',
-           position = 'identity')
+           position = 'identity',
+           color = 'black',
+           fill = '#5671d4') +
+  geom_text(aes(label = percent(MKT_SHARE)), 
+            position = position_dodge(width=1), 
+            hjust = 1.25) +
+  geom_hline(yintercept = 0) +
+  scale_y_continuous(labels = scales::percent) +
+  labs(title = 'Overall, American and United Dominate Overall Market Share',
+       subtitle = 'Q1 of 2019',
+       y = 'Quarterly Market Share',
+       x = '',
+       caption = 'Source: DB1B\nVisualization by Alex Elfering\nSouthwest flies out of Chicago Midway') +
+  theme(plot.title = element_text(face = 'bold', size = 18, family = 'Arial'),
+        plot.subtitle = element_text(size = 15, family = 'Arial'),
+        plot.caption = element_text(size = 12, family = 'Arial'),
+        axis.title = element_text(size = 12, family = 'Arial'),
+        axis.text = element_text(size = 12, family = 'Arial'),
+        strip.text = ggplot2::element_text(size = 12, hjust = 0, face = 'bold', color = 'brown', family = 'Arial'),
+        strip.background = element_rect(fill = NA),
+        panel.background = ggplot2::element_blank(),
+        axis.line = element_line(colour = "#222222", linetype = "solid"),
+        panel.grid.major.y = element_blank(),
+        panel.grid.major.x = ggplot2::element_line(color = "#dedede", linetype = 'dashed')) 
 
 # What origin feeds Chicago to Los Angeles by carrier?
 
