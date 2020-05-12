@@ -27,6 +27,7 @@ head(oma_db)
 
 ####  What is the market share among US Airlines? ####
 reporting_carrier_share <- oma_db %>%
+  filter(!TICKET_CARRIER %in% c('--', '99')) %>%
   group_by(YEAR, 
            TICKET_CARRIER) %>%
   summarise(PAX = sum(PASSENGERS)) %>%
@@ -48,8 +49,6 @@ ggplot(reporting_carrier_share,
        aes(x = YEAR,
            y = MKT_SHARE,
            group = TICKET_CARRIER)) +
-  geom_hline(yintercept = 0,
-             linetype = 'dashed') +
   geom_line(color = 'gray',
             size = 1,
             alpha = 0.6) +
@@ -59,13 +58,26 @@ ggplot(reporting_carrier_share,
                           group = TICKET_CARRIER,
                           color = TICKET_CARRIER),
             size = 1) +
+  geom_hline(yintercept = 0,
+             linetype = 'dashed') +
   scale_y_continuous(labels = scales::percent) +
   labs(title = 'Market Share Among Airlines at Eppley Airfield',
        caption = 'Visualization by Alex Elfering\nSource: DB1A & DB1B',
        y = 'Market Share',
        x = 'Year',
        color = 'Airline') +
-  theme(legend.position = 'top')
+  theme(plot.title = element_text(face = 'bold', size = 18, family = 'Arial'),
+        legend.position = 'top',
+        plot.subtitle = element_text(size = 15, family = 'Arial'),
+        plot.caption = element_text(size = 12, family = 'Arial'),
+        axis.title = element_text(size = 12, family = 'Arial'),
+        axis.text = element_text(size = 12, family = 'Arial'),
+        strip.text = ggplot2::element_text(size = 22, hjust = 0),
+        panel.background = ggplot2::element_blank(),
+        axis.line = element_line(colour = "#222222", linetype = "solid"),
+        panel.grid.major.y = element_line(colour = "gray", linetype = "dashed"),
+        panel.grid.major.x = element_blank()) +
+  guides(colour = guide_legend(nrow = 1))
 
 ####   What is the most popular final destination? ####
 cy_final_dest <- oma_db %>%
