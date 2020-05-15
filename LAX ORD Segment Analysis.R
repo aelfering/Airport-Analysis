@@ -97,7 +97,7 @@ ggplot(one_stop_PHX_LAX,
        subtitle = 'Q1 of 2019',
        y = 'Quarterly Market Share',
        x = '',
-       caption = 'Source: DB1B\nVisualization by Alex Elfering\nSouthwest flies out of Chicago Midway') +
+       caption = 'Source: DB1B\nVisualization by Alex Elfering\nSouthwest flies out of Chicago Midway. Alaska does not connect passengers in Chicago.') +
   theme(plot.title = element_text(face = 'bold', size = 18, family = 'Arial'),
         plot.subtitle = element_text(size = 15, family = 'Arial'),
         plot.caption = element_text(size = 12, family = 'Arial'),
@@ -173,7 +173,7 @@ top_origin_carrier <- db1badf_huge %>%
   mutate(FREQ = PAX/CARRIER_PAX) %>%
   mutate(FREQ_RANK = dense_rank(desc(FREQ))) %>%
   ungroup() %>%
-  filter(FREQ_RANK <= 15) %>%
+  filter(FREQ_RANK == 1) %>%
   arrange(TICKET_CARRIER,
           FREQ_RANK)
   
