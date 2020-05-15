@@ -1,17 +1,13 @@
 #### LOADING THE LIBRARIES ####
-library(lubridate)
-library(dplyr)
-library(tidyr)
-library(tidyverse)
-library(scales)
-library(reshape2)
-library(data.table)
-library(directlabels)
-library(RcppRoll)
-library(zoo)
-library(anytime)
-library(stringr)
+ipak <- function(pkg){
+  new.pkg <- pkg[!(pkg %in% installed.packages()[, "Package"])]
+  if(length(new.pkg))
+    install.packages(new.pkg, dependencies = TRUE)
+}
 
+packages <- c('lubridate', 'dplyr', 'tidyr', 'tidyverse', 'scales', 'reshape2', 'data.table', 'directlabels', 
+              'RcppRoll', 'zoo', 'anytime', 'stringr')
+ipak(packages)
 options(scipen = 999)
 
 db1ba_huge <- list.files("/Users/alexelfering/Desktop/DB1B Whole", pattern = "*.csv", full.names = TRUE)
@@ -64,8 +60,7 @@ ggplot(non_stop_PHX_LAX,
 
 # What passengers fly to Los Angeles via Chicago?
 one_stop_PHX_LAX <- db1badf_huge %>%
-  filter(!TICKET_CARRIER %in% c('--', '99'),
-         OP_CARRIER_CHANGE == 0) %>%
+  filter(!TICKET_CARRIER %in% c('--', '99')) %>%
   filter(DEST %in% c('LAX')) %>%
   mutate(AIRPORT_GROUP = gsub('\\:', ' ', AIRPORT_GROUP)) %>%
   mutate(TOTAL_CONNECTIONS = sapply(strsplit(AIRPORT_GROUP, " "), length)-2) %>%
