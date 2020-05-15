@@ -30,8 +30,7 @@ non_stop_PHX_LAX <- db1badf_huge %>%
   summarise(PAX = sum(PASSENGERS)) %>%
   ungroup() %>%
   mutate(QUARTERLY_PAX = sum(PAX)) %>%
-  mutate(MKT_SHARE = PAX/QUARTERLY_PAX) %>%
-  filter(MKT_SHARE >= 0.01)
+  mutate(MKT_SHARE = PAX/QUARTERLY_PAX)
 
 ggplot(non_stop_PHX_LAX,
        aes(x = reorder(TICKET_CARRIER, MKT_SHARE),
@@ -77,8 +76,7 @@ one_stop_PHX_LAX <- db1badf_huge %>%
   ungroup() %>%
   mutate(QUARTERLY_PAX = sum(TOTAL_PAX)) %>%
   ungroup() %>%
-  mutate(MKT_SHARE = TOTAL_PAX/QUARTERLY_PAX) %>%
-  filter(MKT_SHARE >= 0.01)
+  mutate(MKT_SHARE = TOTAL_PAX/QUARTERLY_PAX)
 
 ggplot(one_stop_PHX_LAX,
        aes(x = reorder(TICKET_CARRIER, MKT_SHARE),
@@ -120,8 +118,7 @@ con_non_mkt_share <- con_non %>%
   replace(is.na(.), 0) %>%
   mutate(Total_Pax = Multi_Stop + Non_Stop) %>%
   mutate(Quaterly_Pax = sum(Total_Pax)) %>%
-  mutate(MKT_SHARE = Total_Pax/Quaterly_Pax) %>%
-  filter(MKT_SHARE >= 0.01)
+  mutate(MKT_SHARE = Total_Pax/Quaterly_Pax)
 
 ggplot(con_non_mkt_share,
        aes(x = reorder(Airline, MKT_SHARE),
@@ -173,7 +170,7 @@ top_origin_carrier <- db1badf_huge %>%
   mutate(FREQ = PAX/CARRIER_PAX) %>%
   mutate(FREQ_RANK = dense_rank(desc(FREQ))) %>%
   ungroup() %>%
-  filter(FREQ_RANK == 1) %>%
+  filter(FREQ_RANK == 1 | ORIGIN == 'ALB') %>%
   arrange(TICKET_CARRIER,
           FREQ_RANK)
   
