@@ -68,7 +68,27 @@ ggplot(con_non_mkt_share,
            y = `Market Share`)) +
   coord_flip() +
   geom_bar(stat = 'identity',
-           position = 'identity') 
+           position = 'identity',
+           fill = 'blue',
+           color = 'black') +
+  labs(title = 'Market Share of Travelers Non-Stop or Connecting to LAX from Chicago',
+       y = 'Percent of Travelers',
+       x = '',
+       caption = 'Q1 of 2019\nVisualization by Alex Elfering\nSource: DB1B') +
+  scale_y_continuous(labels = scales::percent) +
+  geom_hline(yintercept = 0) +
+  theme(plot.title = element_text(face = 'bold', size = 18, family = 'Arial'),
+        legend.position = 'top',
+        plot.subtitle = element_text(size = 15, family = 'Arial'),
+        plot.caption = element_text(size = 12, family = 'Arial'),
+        axis.title = element_text(size = 12, family = 'Arial'),
+        axis.text = element_text(size = 12, family = 'Arial'),
+        strip.text = ggplot2::element_text(size = 12, hjust = 0, face = 'bold', color = 'brown', family = 'Arial'),
+        strip.background = element_rect(fill = NA),
+        panel.background = ggplot2::element_blank(),
+        axis.line = element_line(colour = "#222222", linetype = "solid"),
+        panel.grid.major.y = element_blank(),
+        panel.grid.major.x = element_blank()) 
 
 # Percent of Connecting vs. Non-Stop Passengers
 con_non_pax <- dplyr::select(con_non_mkt_share, 
@@ -97,7 +117,7 @@ ggplot(subset(compare_pax, Passengers > 0 & Passengers != 1),
   coord_flip() +
   geom_bar(stat = 'identity',
            position = 'fill') +
-  labs(title = 'Percent of Travelers Non-Stop or Connecting to LAX',
+  labs(title = 'Percent of Travelers Non-Stop or Connecting to LAX from Chicago',
        fill = 'How to Read:',
        y = 'Percent of Travelers',
        x = '',
