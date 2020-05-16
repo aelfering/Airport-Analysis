@@ -56,27 +56,56 @@ con_non_mkt_share <- con_non %>%
   mutate(Quaterly_Pax = sum(Total_Pax)) %>%
   mutate(Mkt_Share = Total_Pax/Quaterly_Pax,
          Pct_Connect = Multi_Stop/Total_Pax,
-         Pct_Nonstop = Non_Stop/Total_Pax)
+         Pct_Nonstop = Non_Stop/Total_Pax) %>%
+  select(Airline,
+         `Market Share` = Mkt_Share,
+         `Percent of Passengers Who Connect` = Pct_Connect,
+         `Percent of Passengers Non-Stop` = Pct_Nonstop)
 
+# Market Share Graph
 ggplot(con_non_mkt_share,
-       aes(x = reorder(Airline, MKT_SHARE),
-           y = MKT_SHARE)) +
+       aes(x = reorder(Airline, `Market Share`),
+           y = `Market Share`)) +
   coord_flip() +
   geom_bar(stat = 'identity',
-           position = 'identity',
-           color = 'black',
-           fill = '#5671d4') +
-  geom_text(aes(label = percent(MKT_SHARE)), 
-            position = position_dodge(width=1), 
-            hjust = 1.25) +
-  geom_hline(yintercept = 0) +
-  scale_y_continuous(labels = scales::percent) +
-  labs(title = 'Overall, American and United Dominate Overall Market Share',
-       subtitle = 'Q1 of 2019',
-       y = 'Quarterly Market Share',
+           position = 'identity') 
+
+# Percent of Connecting vs. Non-Stop Passengers
+con_non_pax <- dplyr::select(con_non_mkt_share, 
+                             Airline, 
+                             Connecting = `Percent of Passengers Who Connect`, 
+                             NonStop = `Percent of Passengers Non-Stop`)
+
+non_stop_pax <- con_non_pax %>%
+  mutate(Length = 'Non-Stop') %>%
+  select(Airline,
+         Length,
+         Passengers = NonStop)
+
+connecting_pax <- con_non_pax %>%
+  mutate(Length = 'Connecting') %>%
+  select(Airline,
+         Length,
+         Passengers = Connecting)
+
+compare_pax <- rbind(non_stop_pax, connecting_pax)
+
+ggplot(subset(compare_pax, Passengers > 0 & Passengers != 1),
+       aes(x = Airline,
+           y = Passengers,
+           fill = Length)) +
+  coord_flip() +
+  geom_bar(stat = 'identity',
+           position = 'fill') +
+  labs(title = 'Percent of Travelers Non-Stop or Connecting to LAX',
+       fill = 'How to Read:',
+       y = 'Percent of Travelers',
        x = '',
-       caption = 'Source: DB1B\nVisualization by Alex Elfering\nSouthwest flies out of Chicago Midway') +
+       caption = 'Q1 of 2019\nVisualization by Alex Elfering\nSource: DB1B') +
+  scale_y_continuous(labels = scales::percent) +
+  geom_hline(yintercept = 0) +
   theme(plot.title = element_text(face = 'bold', size = 18, family = 'Arial'),
+        legend.position = 'top',
         plot.subtitle = element_text(size = 15, family = 'Arial'),
         plot.caption = element_text(size = 12, family = 'Arial'),
         axis.title = element_text(size = 12, family = 'Arial'),
@@ -86,7 +115,7 @@ ggplot(con_non_mkt_share,
         panel.background = ggplot2::element_blank(),
         axis.line = element_line(colour = "#222222", linetype = "solid"),
         panel.grid.major.y = element_blank(),
-        panel.grid.major.x = ggplot2::element_line(color = "#dedede", linetype = 'dashed')) 
+        panel.grid.major.x = element_blank()) 
 
 # What origin feeds Chicago to Los Angeles by carrier?
 
