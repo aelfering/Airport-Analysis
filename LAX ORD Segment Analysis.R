@@ -49,6 +49,27 @@ one_stop_CHI_SEA <- db1badf_huge %>%
   # This removes Delta tickets that suggested passengers flew on Delta to Chicago
   filter(MKT_SHARE >= 0.01)
 
+# Why does Alaska Airlines connect passengers? Appears to be American flights that AS pax booked
+db1badf_huge %>%
+  filter(!TICKET_CARRIER %in% c('--', '99'),
+         TICKET_CARRIER == 'AS') %>%
+  filter(DEST %in% c('SEA')) %>%
+  mutate(AIRPORT_GROUP = gsub('\\:', ' ', AIRPORT_GROUP)) %>%
+  # Removing the initial origin and final destination regarding connections
+  mutate(TOTAL_CONNECTIONS = sapply(strsplit(AIRPORT_GROUP, " "), length)-2) %>%
+  filter(grepl('ORD SEA', AIRPORT_GROUP) | grepl('MDW SEA', AIRPORT_GROUP),
+         TOTAL_CONNECTIONS > 0) %>%
+  select(TICKET_CARRIER,
+         OP_CARRIER_GROUP,
+         AIRPORT_GROUP,
+         PASSENGERS) %>%
+  group_by(TICKET_CARRIER,
+           OP_CARRIER_GROUP,
+           AIRPORT_GROUP) %>%
+  summarise(PASSENGERS = sum(PASSENGERS)) %>%
+  ungroup() %>%
+  arrange(desc(PASSENGERS))
+
 # What is the combined market share for connecting and non-stop?
 con_non <- merge(one_stop_CHI_LAX, non_stop_CHI_LAX, all.x = TRUE, all.y = TRUE, by = c('TICKET_CARRIER' = 'TICKET_CARRIER'))
 
