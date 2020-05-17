@@ -169,7 +169,7 @@ ggplot(subset(compare_pax, Passengers > 0 & Passengers != 1),
 # What origin feeds Chicago to Los Angeles by carrier?
 
 top_origin_carrier <- db1badf_huge %>%
-  filter(!TICKET_CARRIER %in% c('--', '99')) %>%
+  filter(!TICKET_CARRIER %in% c('--', '99', 'DL')) %>%
   filter(DEST %in% c('SEA')) %>%
   mutate(AIRPORT_GROUP = gsub('\\:', ' ', AIRPORT_GROUP)) %>%
   mutate(TOTAL_CONNECTIONS = sapply(strsplit(AIRPORT_GROUP, " "), length)-2) %>%
@@ -182,7 +182,7 @@ top_origin_carrier <- db1badf_huge %>%
   ungroup() %>%
   group_by(TICKET_CARRIER) %>%
   mutate(CARRIER_PAX = sum(PAX)) %>%
-  mutate(FREQ = PAX/CARRIER_PAX) %>%
+  mutate(FREQ = round(PAX/CARRIER_PAX, 3)) %>%
   mutate(FREQ_RANK = dense_rank(desc(FREQ))) %>%
   ungroup() %>%
   filter(FREQ_RANK == 1 | ORIGIN == 'ALB') %>%
