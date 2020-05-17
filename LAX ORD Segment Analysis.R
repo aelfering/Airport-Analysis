@@ -1,23 +1,26 @@
 #### LOADING THE LIBRARIES ####
-ipak <- function(pkg){
-  new.pkg <- pkg[!(pkg %in% installed.packages()[, "Package"])]
-  if(length(new.pkg))
-    install.packages(new.pkg, dependencies = TRUE)
-}
-
-packages <- c('lubridate', 'dplyr', 'tidyr', 'tidyverse', 'scales', 'reshape2', 'data.table', 'directlabels', 
-              'RcppRoll', 'zoo', 'anytime', 'stringr')
-ipak(packages)
+library(jsonlite)
+library(lubridate)
+library(dplyr)
+library(tidyr)
+library(tidyverse)
+library(scales)
+library(reshape2)
+library(data.table)
+library(directlabels)
+library(RcppRoll)
+library(zoo)
+library(anytime)
 options(scipen = 999)
 
 db1ba_huge <- list.files("/Users/alexelfering/Desktop/DB1B Whole", pattern = "*.csv", full.names = TRUE)
 db1badf_huge <- rbindlist(lapply(db1ba_huge, fread))
 
 # What percent of passengers fly between Chicago and Los Angeles Non-Stop?
-non_stop_CHI_LAX <- db1badf_huge %>%
+non_stop_CHI_SEA <- db1badf_huge %>%
   filter(!TICKET_CARRIER %in% c('--', '99'),
          ORIGIN %in% c('ORD', 'MDW'),
-         DEST %in% c('LAX')) %>%
+         DEST %in% c('SEA')) %>%
   mutate(AIRPORT_GROUP = gsub('\\:', ' ', AIRPORT_GROUP)) %>%
   # Removing the initial origin and final destination regarding connections
   mutate(TOTAL_CONNECTIONS = sapply(strsplit(AIRPORT_GROUP, " "), length)-2) %>%
@@ -29,23 +32,25 @@ non_stop_CHI_LAX <- db1badf_huge %>%
   mutate(MKT_SHARE = PAX/QUARTERLY_PAX)
 
 # What passengers fly to Los Angeles via Chicago?
-one_stop_PHX_LAX <- db1badf_huge %>%
+one_stop_CHI_SEA <- db1badf_huge %>%
   filter(!TICKET_CARRIER %in% c('--', '99')) %>%
-  filter(DEST %in% c('LAX')) %>%
+  filter(DEST %in% c('SEA')) %>%
   mutate(AIRPORT_GROUP = gsub('\\:', ' ', AIRPORT_GROUP)) %>%
   # Removing the initial origin and final destination regarding connections
   mutate(TOTAL_CONNECTIONS = sapply(strsplit(AIRPORT_GROUP, " "), length)-2) %>%
-  filter(grepl('ORD LAX', AIRPORT_GROUP) | grepl('MDW LAX', AIRPORT_GROUP),
+  filter(grepl('ORD SEA', AIRPORT_GROUP) | grepl('MDW SEA', AIRPORT_GROUP),
          TOTAL_CONNECTIONS > 0) %>%
   group_by(TICKET_CARRIER) %>%
   summarise(TOTAL_PAX = sum(PASSENGERS)) %>%
   ungroup() %>%
   mutate(QUARTERLY_PAX = sum(TOTAL_PAX)) %>%
   ungroup() %>%
-  mutate(MKT_SHARE = TOTAL_PAX/QUARTERLY_PAX)
+  mutate(MKT_SHARE = TOTAL_PAX/QUARTERLY_PAX) %>%
+  # This removes Delta tickets that suggested passengers flew on Delta to Chicago
+  filter(MKT_SHARE >= 0.01)
 
 # What is the combined market share for connecting and non-stop?
-con_non <- merge(one_stop_PHX_LAX, non_stop_PHX_LAX, all.x = TRUE, all.y = TRUE, by = c('TICKET_CARRIER' = 'TICKET_CARRIER'))
+con_non <- merge(one_stop_CHI_LAX, non_stop_CHI_LAX, all.x = TRUE, all.y = TRUE, by = c('TICKET_CARRIER' = 'TICKET_CARRIER'))
 
 con_non_mkt_share <- con_non %>%
   select(Airline = TICKET_CARRIER,
@@ -69,7 +74,7 @@ ggplot(con_non_mkt_share,
   coord_flip() +
   geom_bar(stat = 'identity',
            position = 'identity',
-           fill = 'blue',
+           fill = '#f6955f',
            color = 'black') +
   labs(title = 'Market Share of Travelers Non-Stop or Connecting to LAX from Chicago',
        y = 'Percent of Travelers',
@@ -117,13 +122,16 @@ ggplot(subset(compare_pax, Passengers > 0 & Passengers != 1),
   coord_flip() +
   geom_bar(stat = 'identity',
            position = 'fill') +
-  labs(title = 'Percent of Travelers Non-Stop or Connecting to LAX from Chicago',
+  labs(title = 'What is the Ratio of Connecting and Non-Stop Passengers?',
        fill = 'How to Read:',
        y = 'Percent of Travelers',
        x = '',
-       caption = 'Q1 of 2019\nVisualization by Alex Elfering\nSource: DB1B') +
+       caption = 'Q1 of 2019. Delta flies all non-stop and is excluded.\nVisualization by Alex Elfering\nSource: DB1B') +
   scale_y_continuous(labels = scales::percent) +
+  scale_fill_manual(values= c('#5681b9', '#00429d')) +
   geom_hline(yintercept = 0) +
+  geom_hline(yintercept = 0.5,
+             linetype = 'dashed') +
   theme(plot.title = element_text(face = 'bold', size = 18, family = 'Arial'),
         legend.position = 'top',
         plot.subtitle = element_text(size = 15, family = 'Arial'),
@@ -141,10 +149,10 @@ ggplot(subset(compare_pax, Passengers > 0 & Passengers != 1),
 
 top_origin_carrier <- db1badf_huge %>%
   filter(!TICKET_CARRIER %in% c('--', '99')) %>%
-  filter(DEST %in% c('LAX')) %>%
+  filter(DEST %in% c('SEA')) %>%
   mutate(AIRPORT_GROUP = gsub('\\:', ' ', AIRPORT_GROUP)) %>%
   mutate(TOTAL_CONNECTIONS = sapply(strsplit(AIRPORT_GROUP, " "), length)-2) %>%
-  filter(grepl('ORD LAX', AIRPORT_GROUP) | grepl('MDW LAX', AIRPORT_GROUP),
+  filter(grepl('ORD SEA', AIRPORT_GROUP) | grepl('MDW SEA', AIRPORT_GROUP),
          TOTAL_CONNECTIONS > 0) %>%
   group_by(TICKET_CARRIER) %>%
   group_by(TICKET_CARRIER, 
