@@ -194,11 +194,12 @@ aa <- ggplot(subset(top_origin_carrier, TICKET_CARRIER == 'AA'),
            y = FREQ)) +
   coord_flip() +
   geom_bar(stat = 'identity',
+           fill = '#d50000',
+           color = 'black',
            position = 'identity') +
   scale_y_continuous(labels = scales::percent) +
   geom_hline(yintercept = 0) +
   labs(title = 'American Airlines',
-       fill = 'How to Read:',
        y = 'Percent of Travelers',
        x = '') +
   theme(plot.title = element_text(face = 'bold', size = 15, family = 'Arial'),
@@ -219,11 +220,12 @@ ua <- ggplot(subset(top_origin_carrier, TICKET_CARRIER == 'UA'),
            y = FREQ)) +
   coord_flip() +
   geom_bar(stat = 'identity',
+           fill = '#2e59a8',
+           color = 'black',
            position = 'identity') +
   scale_y_continuous(labels = scales::percent) +
   geom_hline(yintercept = 0) +
   labs(title = 'United Airlines',
-       fill = 'How to Read:',
        y = 'Percent of Travelers',
        x = '') +
   theme(plot.title = element_text(face = 'bold', size = 15, family = 'Arial'),
@@ -244,11 +246,12 @@ wn <- ggplot(subset(top_origin_carrier, TICKET_CARRIER == 'WN'),
            y = FREQ)) +
   coord_flip() +
   geom_bar(stat = 'identity',
+           fill = '#ff5d2b',
+           color = 'black',
            position = 'identity')  +
   scale_y_continuous(labels = scales::percent) +
   geom_hline(yintercept = 0) +
   labs(title = 'Southwest Airlines',
-       fill = 'How to Read:',
        y = 'Percent of Travelers',
        x = '') +
   theme(plot.title = element_text(face = 'bold', size = 15, family = 'Arial'),
@@ -269,4 +272,5 @@ grid.arrange(aa,
              ua, 
              wn, 
              ncol=3,
-             top = textGrob("Top Origin Airports Connecting Through",gp = gpar(fontsize = 18, font = 2)))
+             top = textGrob("Top Origin Airports Connecting Through Chicago en route to Seattle", 
+                            gp = gpar(fontsize = 18, font = 2)))
