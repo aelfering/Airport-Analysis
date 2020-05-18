@@ -169,7 +169,7 @@ ggplot(subset(compare_pax, Passengers > 0 & Passengers != 1),
 # What origin feeds Chicago to Los Angeles by carrier?
 
 top_origin_carrier <- db1badf_huge %>%
-  filter(!TICKET_CARRIER %in% c('--', '99', 'DL')) %>%
+  filter(!TICKET_CARRIER %in% c('--', '99', 'DL', 'AS')) %>%
   filter(DEST %in% c('SEA')) %>%
   mutate(AIRPORT_GROUP = gsub('\\:', ' ', AIRPORT_GROUP)) %>%
   mutate(TOTAL_CONNECTIONS = sapply(strsplit(AIRPORT_GROUP, " "), length)-2) %>%
@@ -182,11 +182,83 @@ top_origin_carrier <- db1badf_huge %>%
   ungroup() %>%
   group_by(TICKET_CARRIER) %>%
   mutate(CARRIER_PAX = sum(PAX)) %>%
-  mutate(FREQ = round(PAX/CARRIER_PAX, 3)) %>%
+  mutate(FREQ = PAX/CARRIER_PAX) %>%
   mutate(FREQ_RANK = dense_rank(desc(FREQ))) %>%
   ungroup() %>%
-  filter(FREQ_RANK == 1 | ORIGIN == 'ALB') %>%
-  arrange(TICKET_CARRIER,
-          FREQ_RANK)
-  
+  filter(FREQ_RANK <= 5)
+
+ggplot(subset(top_origin_carrier, TICKET_CARRIER == 'AA'),
+       aes(x = reorder(ORIGIN, FREQ),
+           y = FREQ)) +
+  coord_flip() +
+  geom_bar(stat = 'identity',
+           position = 'identity') +
+  scale_y_continuous(labels = scales::percent) +
+  geom_hline(yintercept = 0) +
+  labs(title = 'American Airlines',
+       fill = 'How to Read:',
+       y = 'Percent of Travelers',
+       x = '') +
+  theme(plot.title = element_text(face = 'bold', size = 15, family = 'Arial'),
+        legend.position = 'top',
+        plot.subtitle = element_text(size = 15, family = 'Arial'),
+        plot.caption = element_text(size = 12, family = 'Arial'),
+        axis.title = element_text(size = 12, family = 'Arial'),
+        axis.text = element_text(size = 12, family = 'Arial'),
+        strip.text = ggplot2::element_text(size = 12, hjust = 0, face = 'bold', color = 'brown', family = 'Arial'),
+        strip.background = element_rect(fill = NA),
+        panel.background = ggplot2::element_blank(),
+        axis.line = element_line(colour = "#222222", linetype = "solid"),
+        panel.grid.major.y = element_blank(),
+        panel.grid.major.x = element_blank()) 
+
+ggplot(subset(top_origin_carrier, TICKET_CARRIER == 'UA'),
+       aes(x = reorder(ORIGIN, FREQ),
+           y = FREQ)) +
+  coord_flip() +
+  geom_bar(stat = 'identity',
+           position = 'identity') +
+  scale_y_continuous(labels = scales::percent) +
+  geom_hline(yintercept = 0) +
+  labs(title = 'United Airlines',
+       fill = 'How to Read:',
+       y = 'Percent of Travelers',
+       x = '') +
+  theme(plot.title = element_text(face = 'bold', size = 15, family = 'Arial'),
+        legend.position = 'top',
+        plot.subtitle = element_text(size = 15, family = 'Arial'),
+        plot.caption = element_text(size = 12, family = 'Arial'),
+        axis.title = element_text(size = 12, family = 'Arial'),
+        axis.text = element_text(size = 12, family = 'Arial'),
+        strip.text = ggplot2::element_text(size = 12, hjust = 0, face = 'bold', color = 'brown', family = 'Arial'),
+        strip.background = element_rect(fill = NA),
+        panel.background = ggplot2::element_blank(),
+        axis.line = element_line(colour = "#222222", linetype = "solid"),
+        panel.grid.major.y = element_blank(),
+        panel.grid.major.x = element_blank()) 
+
+ggplot(subset(top_origin_carrier, TICKET_CARRIER == 'WN'),
+       aes(x = reorder(ORIGIN, FREQ),
+           y = FREQ)) +
+  coord_flip() +
+  geom_bar(stat = 'identity',
+           position = 'identity')  +
+  scale_y_continuous(labels = scales::percent) +
+  geom_hline(yintercept = 0) +
+  labs(title = 'Southwest Airlines',
+       fill = 'How to Read:',
+       y = 'Percent of Travelers',
+       x = '') +
+  theme(plot.title = element_text(face = 'bold', size = 15, family = 'Arial'),
+        legend.position = 'top',
+        plot.subtitle = element_text(size = 15, family = 'Arial'),
+        plot.caption = element_text(size = 12, family = 'Arial'),
+        axis.title = element_text(size = 12, family = 'Arial'),
+        axis.text = element_text(size = 12, family = 'Arial'),
+        strip.text = ggplot2::element_text(size = 12, hjust = 0, face = 'bold', color = 'brown', family = 'Arial'),
+        strip.background = element_rect(fill = NA),
+        panel.background = ggplot2::element_blank(),
+        axis.line = element_line(colour = "#222222", linetype = "solid"),
+        panel.grid.major.y = element_blank(),
+        panel.grid.major.x = element_blank()) 
   
