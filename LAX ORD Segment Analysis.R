@@ -273,4 +273,6 @@ grid.arrange(aa,
              wn, 
              ncol=3,
              top = textGrob("Top Origin Airports Connecting Through Chicago en route to Seattle", 
-                            gp = gpar(fontsize = 18, font = 2)))
+                            gp = gpar(fontsize = 18, font = 2)),
+             bottom = textGrob("Visualization by Alex Elfering\nSource: DB1B", 
+                               gp = gpar(fontsize = 10, font = 1)))
