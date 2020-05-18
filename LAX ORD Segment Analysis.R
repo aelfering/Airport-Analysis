@@ -169,7 +169,6 @@ ggplot(subset(compare_pax, Passengers > 0 & Passengers != 1),
         panel.grid.major.x = element_blank()) 
 
 # What origin feeds Chicago to Los Angeles by carrier?
-
 top_origin_carrier <- db1badf_huge %>%
   filter(!TICKET_CARRIER %in% c('--', '99', 'DL', 'AS')) %>%
   filter(DEST %in% c('SEA')) %>%
@@ -184,7 +183,8 @@ top_origin_carrier <- db1badf_huge %>%
   ungroup() %>%
   group_by(TICKET_CARRIER) %>%
   mutate(CARRIER_PAX = sum(PAX)) %>%
-  mutate(FREQ = PAX/CARRIER_PAX) %>%
+  mutate(FREQ = PAX/CARRIER_PAX,
+         FREQ_LABEL = paste(round((PAX/CARRIER_PAX)*100, 2), "%", sep = '')) %>%
   mutate(FREQ_RANK = dense_rank(desc(FREQ))) %>%
   ungroup() %>%
   filter(FREQ_RANK <= 5)
@@ -202,6 +202,9 @@ aa <- ggplot(subset(top_origin_carrier, TICKET_CARRIER == 'AA'),
   labs(title = 'American Airlines',
        y = 'Percent of Travelers',
        x = '') +
+  geom_text(aes(label = FREQ_LABEL), 
+            position = position_dodge(width=1), 
+            hjust = 1.25) +
   theme(plot.title = element_text(face = 'bold', size = 15, family = 'Arial'),
         legend.position = 'top',
         plot.subtitle = element_text(size = 15, family = 'Arial'),
@@ -228,6 +231,9 @@ ua <- ggplot(subset(top_origin_carrier, TICKET_CARRIER == 'UA'),
   labs(title = 'United Airlines',
        y = 'Percent of Travelers',
        x = '') +
+  geom_text(aes(label = FREQ_LABEL), 
+            position = position_dodge(width=1), 
+            hjust = 1.25) +
   theme(plot.title = element_text(face = 'bold', size = 15, family = 'Arial'),
         legend.position = 'top',
         plot.subtitle = element_text(size = 15, family = 'Arial'),
@@ -254,6 +260,9 @@ wn <- ggplot(subset(top_origin_carrier, TICKET_CARRIER == 'WN'),
   labs(title = 'Southwest Airlines',
        y = 'Percent of Travelers',
        x = '') +
+  geom_text(aes(label = FREQ_LABEL), 
+            position = position_dodge(width=1), 
+            hjust = 1.25) +
   theme(plot.title = element_text(face = 'bold', size = 15, family = 'Arial'),
         legend.position = 'top',
         plot.subtitle = element_text(size = 15, family = 'Arial'),
