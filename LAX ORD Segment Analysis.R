@@ -1,5 +1,4 @@
 #### LOADING THE LIBRARIES ####
-library(jsonlite)
 library(lubridate)
 library(dplyr)
 library(tidyr)
@@ -11,6 +10,9 @@ library(directlabels)
 library(RcppRoll)
 library(zoo)
 library(anytime)
+library(gridExtra)
+library(grid)
+
 options(scipen = 999)
 
 db1ba_huge <- list.files("/Users/alexelfering/Desktop/DB1B Whole", pattern = "*.csv", full.names = TRUE)
@@ -71,7 +73,7 @@ db1badf_huge %>%
   arrange(desc(PASSENGERS))
 
 # What is the combined market share for connecting and non-stop?
-con_non <- merge(one_stop_CHI_LAX, non_stop_CHI_LAX, all.x = TRUE, all.y = TRUE, by = c('TICKET_CARRIER' = 'TICKET_CARRIER'))
+con_non <- merge(one_stop_CHI_SEA, non_stop_CHI_SEA, all.x = TRUE, all.y = TRUE, by = c('TICKET_CARRIER' = 'TICKET_CARRIER'))
 
 con_non_mkt_share <- con_non %>%
   select(Airline = TICKET_CARRIER,
@@ -187,7 +189,7 @@ top_origin_carrier <- db1badf_huge %>%
   ungroup() %>%
   filter(FREQ_RANK <= 5)
 
-ggplot(subset(top_origin_carrier, TICKET_CARRIER == 'AA'),
+aa <- ggplot(subset(top_origin_carrier, TICKET_CARRIER == 'AA'),
        aes(x = reorder(ORIGIN, FREQ),
            y = FREQ)) +
   coord_flip() +
@@ -212,7 +214,7 @@ ggplot(subset(top_origin_carrier, TICKET_CARRIER == 'AA'),
         panel.grid.major.y = element_blank(),
         panel.grid.major.x = element_blank()) 
 
-ggplot(subset(top_origin_carrier, TICKET_CARRIER == 'UA'),
+ua <- ggplot(subset(top_origin_carrier, TICKET_CARRIER == 'UA'),
        aes(x = reorder(ORIGIN, FREQ),
            y = FREQ)) +
   coord_flip() +
@@ -237,7 +239,7 @@ ggplot(subset(top_origin_carrier, TICKET_CARRIER == 'UA'),
         panel.grid.major.y = element_blank(),
         panel.grid.major.x = element_blank()) 
 
-ggplot(subset(top_origin_carrier, TICKET_CARRIER == 'WN'),
+wn <- ggplot(subset(top_origin_carrier, TICKET_CARRIER == 'WN'),
        aes(x = reorder(ORIGIN, FREQ),
            y = FREQ)) +
   coord_flip() +
@@ -262,3 +264,9 @@ ggplot(subset(top_origin_carrier, TICKET_CARRIER == 'WN'),
         panel.grid.major.y = element_blank(),
         panel.grid.major.x = element_blank()) 
   
+
+grid.arrange(aa, 
+             ua, 
+             wn, 
+             ncol=3,
+             top = textGrob("Top Origin Airports Connecting Through",gp = gpar(fontsize = 18, font = 2)))
