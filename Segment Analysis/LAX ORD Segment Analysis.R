@@ -18,7 +18,7 @@ options(scipen = 999)
 db1b <- list.files("/Users/alexelfering/Desktop/DB1B Whole", pattern = "*.csv", full.names = TRUE)
 db1bdf <- rbindlist(lapply(db1b, fread))
 
-# What percent of passengers fly between Chicago and Los Angeles Non-Stop?
+# What passengers fly between Chicago and Los Angeles Non-Stop?
 non_stop_CHI_SEA <- db1bdf %>%
   filter(!TICKET_CARRIER %in% c('--', '99'),
          ORIGIN %in% c('ORD', 'MDW'),
@@ -34,7 +34,7 @@ non_stop_CHI_SEA <- db1bdf %>%
   mutate(MKT_SHARE = PAX/QUARTERLY_PAX)
 
 # What passengers fly to Los Angeles via Chicago?
-one_stop_CHI_SEA <- db1badf_huge %>%
+one_stop_CHI_SEA <- db1bdf %>%
   filter(!TICKET_CARRIER %in% c('--', '99')) %>%
   filter(DEST %in% c('SEA')) %>%
   mutate(AIRPORT_GROUP = gsub('\\:', ' ', AIRPORT_GROUP)) %>%
