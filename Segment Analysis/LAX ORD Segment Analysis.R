@@ -99,6 +99,9 @@ ggplot(con_non_mkt_share,
            position = 'identity',
            fill = '#f6955f',
            color = 'black') +
+  geom_text(aes(label = paste(round((`Market Share`)*100, 2), "%", sep = '')), 
+            position = position_dodge(width=1), 
+            hjust = 1.25) +
   labs(title = 'Market Share of Travelers Non-Stop or Connecting to LAX from Chicago',
        y = 'Percent of Travelers',
        x = '',
