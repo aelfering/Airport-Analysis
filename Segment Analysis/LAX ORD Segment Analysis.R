@@ -105,7 +105,7 @@ ggplot(con_non_mkt_share,
   labs(title = 'Market Share of Travelers Non-Stop or Connecting to LAX from Chicago',
        y = 'Percent of Travelers',
        x = '',
-       caption = 'Q1 of 2019\nVisualization by Alex Elfering\nSource: DB1B') +
+       caption = 'Visualization by Alex Elfering\nSource: DB1B') +
   scale_y_continuous(labels = scales::percent) +
   geom_hline(yintercept = 0) +
   theme(plot.title = element_text(face = 'bold', size = 18, family = 'Arial'),
