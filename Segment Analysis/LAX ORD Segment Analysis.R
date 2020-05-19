@@ -15,11 +15,11 @@ library(grid)
 
 options(scipen = 999)
 
-db1ba_huge <- list.files("/Users/alexelfering/Desktop/DB1B Whole", pattern = "*.csv", full.names = TRUE)
-db1badf_huge <- rbindlist(lapply(db1ba_huge, fread))
+db1b <- list.files("/Users/alexelfering/Desktop/DB1B Whole", pattern = "*.csv", full.names = TRUE)
+db1bdf <- rbindlist(lapply(db1b, fread))
 
 # What percent of passengers fly between Chicago and Los Angeles Non-Stop?
-non_stop_CHI_SEA <- db1badf_huge %>%
+non_stop_CHI_SEA <- db1bdf %>%
   filter(!TICKET_CARRIER %in% c('--', '99'),
          ORIGIN %in% c('ORD', 'MDW'),
          DEST %in% c('SEA')) %>%
