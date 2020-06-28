@@ -28,10 +28,21 @@ airport_df <- as.data.frame(rbindlist(lapply(airport_files, fread)))
 
 head(airport_df)
 
+airport_df %>%
+  mutate(FL_DATE = ymd(FL_DATE)) %>%
+  filter(FL_DATE >= '2020-03-01') %>%
+  distinct(FL_DATE) %>%
+  arrange(FL_DATE) %>%
+  mutate(weeks = ifelse(FL_DATE >= max(FL_DATE)-14, 1, 0),
+         weeks = ifelse(FL_DATE < max(FL_DATE)-14 & FL_DATE >= max(FL_DATE)-28, 2, weeks))
+
+
+
 mark1 <- airport_df %>%
   # Format dates correctly and control to look at March and April
   mutate(FL_DATE = ymd(FL_DATE)) %>%
-  filter(FL_DATE >= '2020-03-01') %>%
+  filter(FL_DATE >= '2020-03-01',
+         ORIGIN %in% airport_pax$ORIGIN) %>%
   # Replace all NA values with 0 for good measure
   replace(is.na(.), 0) %>%
   # Summarise total flights and cancelled flights by airport
@@ -58,14 +69,36 @@ mark1 <- airport_df %>%
          ROLLING_TOTAL_CANCELLED = rollapplyr(TOTAL_CANCELLED, 14, sum, partial = TRUE),
          PCT_CANCELLED = ROLLING_CANCELLED/ROLLING_FLIGHTS,
          PCT_TOTAL_CANCELLED = ROLLING_TOTAL_CANCELLED/ROLLING_TOTAL_FLIGHTS) %>%
+  ungroup()
+
+
   # Identify the most recent two weeks and the prior two weeks
+mark2 <- mark1 %>%
+  mutate(weeks = ifelse(FL_DATE >= max(FL_DATE)-14, 1, 0),
+         weeks = ifelse(FL_DATE < max(FL_DATE)-14 & FL_DATE >= max(FL_DATE)-28, 2, weeks)) %>%
+  group_by(ORIGIN,
+           weeks) %>%
+  mutate(AVG_CANCELLATIONS = mean(CANCELLED/FLIGHTS),
+         AVG_CANCELLATIONS = ifelse(weeks == 0, NA, AVG_CANCELLATIONS)) %>%
+  ungroup() %>%
+  group_by(ORIGIN) %>%
+  mutate(WEEK_CHG = AVG_CANCELLATIONS - lag(AVG_CANCELLATIONS)) %>%
+  filter(weeks == 1) %>%
+  filter(FL_DATE == min(FL_DATE)) %>%
+  ungroup() %>%
+  select(ORIGIN,
+         WEEK_CHG) %>%
+  mutate(trajectory = ifelse(WEEK_CHG >= 0.05, 1, 0),
+         trajectory = ifelse(WEEK_CHG <= -0.05, -1, trajectory),
+         trajectory = ifelse(WEEK_CHG < 0.05 & WEEK_CHG > -0.05, 0, trajectory))
 
 head(mark1)
+head(mark2)
+
+mark3 <- inner_join(mark1, mark2, by = c('ORIGIN' = 'ORIGIN'))
 
 
-
-
-ggplot(subset(mark1, ORIGIN %in% airport_pax$ORIGIN),
+ggplot(subset(mark3, trajectory == 0),
        aes(x = FL_DATE,
            y = CANCELLED/FLIGHTS,
            group = ORIGIN)) +
@@ -73,20 +106,20 @@ ggplot(subset(mark1, ORIGIN %in% airport_pax$ORIGIN),
   geom_bar(stat = 'identity',
            position = 'identity',
            fill = '#c5eddf') +
-  geom_bar(data = subset(mark1, ORIGIN %in% airport_pax$ORIGIN & FL_DATE >= max(FL_DATE)-14),
+  geom_bar(data = subset(mark3, trajectory == 0 & FL_DATE >= max(FL_DATE)-14),
            mapping = aes(x = FL_DATE,
                          y = CANCELLED/FLIGHTS,
                          group = ORIGIN),
            stat = 'identity',
            position = 'identity',
            fill = '#5d8abd') +
-  geom_line(data = subset(mark1, ORIGIN %in% airport_pax$ORIGIN),
+  geom_line(data = subset(mark3, trajectory == 0),
             mapping = aes(x = FL_DATE,
                           y = PCT_TOTAL_CANCELLED,
                           group = ORIGIN),
             color = 'black',
             size = 1) +
-  geom_line(data = subset(mark1, ORIGIN %in% airport_pax$ORIGIN),
+  geom_line(data = subset(mark3, trajectory == 0),
             mapping = aes(x = FL_DATE,
                           y = PCT_CANCELLED,
                           group = ORIGIN),
