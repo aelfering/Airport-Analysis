@@ -18,6 +18,8 @@ options(scipen = 999)
 db1b <- list.files("/Users/alexelfering/Desktop/DB1B Whole", pattern = "*.csv", full.names = TRUE)
 db1bdf <- rbindlist(lapply(db1b, fread))
 
+str(as.data.frame(db1bdf))
+
 # What passengers fly between Chicago and Los Angeles Non-Stop?
 non_stop_CHI_SEA <- db1bdf %>%
   filter(!TICKET_CARRIER %in% c('--', '99'),
@@ -48,7 +50,7 @@ one_stop_CHI_SEA <- db1bdf %>%
   mutate(QUARTERLY_PAX = sum(TOTAL_PAX)) %>%
   ungroup() %>%
   mutate(MKT_SHARE = TOTAL_PAX/QUARTERLY_PAX) %>%
-  # This removes Delta tickets that suggested passengers flew on Delta to Chicago
+  # This removes Delta tickets that suggested passengers connected on Delta through Chicago
   filter(MKT_SHARE >= 0.01)
 
 # Why does Alaska Airlines connect passengers? Appears to be American flights that AS pax booked
