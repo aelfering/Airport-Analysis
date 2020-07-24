@@ -63,7 +63,7 @@ missing.years.filled %>%
                           color = Origin),
             size = 1) +
   labs(title = 'Monthly Passengers Totals for MCI, OMA and DSM',
-       subtitle = 'January 2010 - April 2020'
+       subtitle = 'January 2010 - April 2020',
        caption = 'Visualization by Alex Elfering\nSource: Visual Approach T-100 Pivot, Bureau of Transportation Statistics') +
   theme(legend.position = 'top')
 
