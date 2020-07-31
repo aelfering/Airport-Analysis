@@ -46,6 +46,7 @@ mark1 <- df %>%
   mutate(Airline = airline,
          Frequency = rate)
 
+# assigning column names
 colnames(mark1)[1] <- "Metric"
 colnames(mark1)[2] <- "Total"
 mark2 <- mark1[-1, ]
@@ -61,14 +62,14 @@ identify.equipment <- function(df){
   # identify the airline's equipment
   df$Equipment <- ifelse(grepl('All', df$Airline), 'All', NA)
   
-  # identify the airline
+  # identify the airline IATA code
   df$Airline <- substr(df$Airline, 1, 2)
   
   return(df)
 }
 character.to.integer <- function(df){
   
-  df$New.Total <- as.numeric(df$Total)
+  df$Total <- as.numeric(df$Total)
   
   return(df)
 }
