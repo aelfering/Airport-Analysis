@@ -3,6 +3,7 @@ library(dplyr)
 library(tidyr)
 library(tidyverse)
 library(ggplot2)
+library(data.table)
 
 setwd("~/Documents/GitHub/Airport-Analysis/Visual Approach Aircraft Costs Tidying")
 
@@ -61,4 +62,4 @@ identify.equipment <- function(df){
 apply.tidy.list <- lapply(airline.list, tidy_xl_vs)
 airline.name.cleaned <- lapply(apply.tidy.list, identify.equipment)
 
-airline.cost.df <- as.data.frame(do.call(rbind.data.frame, airline.name.cleaned))
+airline.cost.df <- rbindlist(airline.name.cleaned)
