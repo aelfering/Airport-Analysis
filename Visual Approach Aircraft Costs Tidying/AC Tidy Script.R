@@ -85,11 +85,11 @@ airline.integer <- character.to.integer(airline.cost.df)
 ####  Visualizations  ####
 ggplot(subset(airline.integer, Metric == 'Total Operating Expenses'),
        aes(x = Period,
-           y = New.Total)) + 
+           y = Total)) + 
   geom_step() +
   geom_point(data = subset(airline.integer, Metric == 'Total Operating Expenses'),
              mapping = aes(x = Period,
-                           y = New.Total)) +
+                           y = Total)) +
   labs(title = 'Total Operating Expenses for Alaska Airlines per Departure',
        subtitle = 'Between 2000-2019',
        y = '',
@@ -110,8 +110,8 @@ fuel_ratio <- airline.integer.fuel %>%
          Period,
          Metric.Num = Metric.x,
          Metric.Dem = Metric.y,
-         Fuel.Total = New.Total.x,
-         Total.Op.Exp = New.Total.y) %>%
+         Fuel.Total = Total.x,
+         Total.Op.Exp = Total.y) %>%
   mutate(Ratio = Fuel.Total/Total.Op.Exp)
 
 ggplot(fuel_ratio,
