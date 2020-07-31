@@ -57,9 +57,74 @@ identify.equipment <- function(df){
   
   return(df)
 }
+character.to.integer <- function(df){
+  
+  df$New.Total <- as.numeric(df$Total)
+  
+  return(df)
+}
 
 #### putting the functions to work and creating the final data frame ####
 apply.tidy.list <- lapply(airline.list, tidy_xl_vs)
 airline.name.cleaned <- lapply(apply.tidy.list, identify.equipment)
 
 airline.cost.df <- rbindlist(airline.name.cleaned)
+
+airline.integer <- character.to.integer(airline.cost.df)
+
+####  Visualizations  ####
+ggplot(subset(airline.integer, Metric == 'Total Operating Expenses'),
+       aes(x = Period,
+           y = New.Total)) + 
+  geom_step() +
+  geom_point(data = subset(airline.integer, Metric == 'Total Operating Expenses'),
+             mapping = aes(x = Period,
+                           y = New.Total)) +
+  labs(title = 'Total Operating Expenses for Alaska Airlines per Departure',
+       subtitle = 'Between 2000-2019',
+       y = '',
+       x = 'Year',
+       caption = 'Source: Visual Approach\nVisualization by Alex Elfering')
+
+# What is the fuel cost to total expense ratio?
+airline.integer.total.expense <- dplyr::filter(airline.integer, Metric == 'Total Operating Expenses')
+airline.integer.fuel <- dplyr::filter(airline.integer, Metric == 'Fuel')
+
+fuel_ratio <- airline.integer.fuel %>%
+  inner_join(airline.integer.total.expense, 
+             by = c('Airline' = 'Airline', 
+                    'Frequency' = 'Frequency',
+                    'Period' = 'Period',
+                    'Equipment' = 'Equipment')) %>%
+  select(Airline,
+         Period,
+         Metric.Num = Metric.x,
+         Metric.Dem = Metric.y,
+         Fuel.Total = New.Total.x,
+         Total.Op.Exp = New.Total.y) %>%
+  mutate(Ratio = Fuel.Total/Total.Op.Exp)
+
+ggplot(fuel_ratio,
+       aes(x = Period,
+           y = Ratio)) +
+  geom_step() + 
+  geom_point(data = fuel_ratio,
+             mapping = aes(x = Period,
+                           y = Ratio)) +
+  scale_y_continuous(labels = scales::percent) +
+  labs(title = 'Fuel as Percent of Total Operating Expenses for Alaska Airlines per Departure',
+       subtitle = 'The ratio climbed rapidly starting in 2005 and only started to really fall in 2015.',
+       y = 'Ratio',
+       x = 'Year',
+       caption = 'Source: Visual Approach\nVisualization by Alex Elfering')
+
+
+
+
+
+
+
+
+
+
+
