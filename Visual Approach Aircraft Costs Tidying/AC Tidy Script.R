@@ -59,6 +59,6 @@ identify.equipment <- function(df){
 
 #### putting the functions to work and creating the final data frame ####
 apply.tidy.list <- lapply(airline.list, tidy_xl_vs)
-lapply(apply.tidy.list, identify.equipment)
+airline.name.cleaned <- lapply(apply.tidy.list, identify.equipment)
 
-airline.cost.df <- as.data.frame(do.call(rbind.data.frame, apply.tidy.list))
+airline.cost.df <- as.data.frame(do.call(rbind.data.frame, airline.name.cleaned))
