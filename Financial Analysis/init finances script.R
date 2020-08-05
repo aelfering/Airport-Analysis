@@ -41,7 +41,8 @@ airline_op_exp <- operating_expenses %>%
   filter(CARRIER %in% airlines) %>%
   group_by(CARRIER,
            YEAR) %>%
-  summarise(SALARIES_BENEFITS = sum(SALARIES_BENEFITS),
+  summarise(SALARIES = sum(SALARIES),
+            BENEFITS = sum(BENEFITS),
             MATERIALS_TOTAL = sum(MATERIALS_TOTAL),
             SERVICES_TOTAL = sum(SERVICES_TOTAL),
             LANDING_FEES = sum(LANDING_FEES),
@@ -74,7 +75,8 @@ ggplot(subset(airline_op_exp, METRICS != 'OTHER'),
 colnames(operating_expenses)
 str(operating_expenses)
 
-salaries_benefits <- c("SALARIES_MGT", "SALARIES_FLIGHT", "SALARIES_MAINT", "SALARIES_TRAFFIC", "SALARIES_OTHER", "BENEFITS_PERSONNEL", "BENEFITS_PENSIONS", "BENEFITS_PAYROLL", "BENEFITS")
+salaries <- c("SALARIES_MGT", "SALARIES_FLIGHT", "SALARIES_MAINT", "SALARIES_TRAFFIC", "SALARIES_OTHER")
+benefits <- c("BENEFITS_PERSONNEL", "BENEFITS_PENSIONS", "BENEFITS_PAYROLL", "BENEFITS")
 materials_purchased <- c("AIRCRAFT_FUEL", "MAINT_MATERIAL", "FOOD", "OTHER_MATERIALS")
 services_purchased <- c("ADVERTISING", "COMMUNICATION", "INSURANCE", "OUTSIDE_EQUIP", "COMMISIONS_PAX", "COMMISSIONS_CARGO", "OTHER_SERVICES")
 columns_to_not_select <- c("AIRLINE_ID", "UNIQUE_CARRIER", "UNIQUE_CARRIER_NAME", "OP_EXPENSE", "UNIQUE_CARRIER_ENTITY", "REGION", "CARRIER_GROUP_NEW", "CARRIER_GROUP", "QUARTER", "X",
@@ -94,7 +96,8 @@ metrics.sub.metrics <- operating_expenses %>%
                   YEAR), 
                names_to = "SUB.METRICS", 
                values_to = "SUB.AMOUNT")  %>%
-  mutate(METRICS = ifelse(SUB.METRICS %in% salaries_benefits, "SALARIES_BENEFITS", NA),
+  mutate(METRICS = ifelse(SUB.METRICS %in% salaries, "SALARIES", NA),
+         METRICS = ifelse(SUB.METRICS %in% benefits, "BENEFITS", METRICS),
          METRICS = ifelse(SUB.METRICS %in% materials_purchased, "MATERIALS_TOTAL", METRICS),
          METRICS = ifelse(SUB.METRICS %in% services_purchased, "SERVICES_TOTAL", METRICS),
          METRICS = ifelse(SUB.METRICS == "SERVICES_TOTAL", "SERVICES_TOTAL", METRICS),
@@ -103,7 +106,8 @@ metrics.sub.metrics <- operating_expenses %>%
          METRICS = ifelse(SUB.METRICS == "DEPRECIATION", "DEPRECIATION", METRICS),
          METRICS = ifelse(SUB.METRICS == "AMORTIZATION", "AMORTIZATION", METRICS),
          METRICS = ifelse(SUB.METRICS == "OTHER", "OTHER", METRICS),
-         METRICS = ifelse(SUB.METRICS == "TRANS_EXPENSE", "TRANS_EXPENSE", METRICS))
+         METRICS = ifelse(SUB.METRICS == "TRANS_EXPENSE", "TRANS_EXPENSE", METRICS)) %>%
+  filter(CARRIER == 'WN', YEAR == 2019)
 
 # basic treemap
 library(htmltools)
@@ -111,8 +115,8 @@ library(htmltools)
 p <- treemap(metrics.sub.metrics,
              index=c("METRICS","SUB.METRICS"),
              vSize="SUB.AMOUNT",
+             vColor = "METRICS",
              type="index",
-             palette = "Set2",
              bg.labels=c("white"),
              align.labels=list(
                c("center", "center"), 
@@ -129,7 +133,7 @@ browsable(
       tags$style('text.label{font-size: 12px !important}')
     ),
     d3tree(p,
-           rootname = "Components of an Airline' Operating Expenses" )
+           rootname = "Components of an Airline' Operating Expenses")
     ,rootname = "Visualization by Alex Elfering Source: Bureau of Transportation Statistics")
   )
 
