@@ -5,12 +5,6 @@ library(dplyr)
 library(tidylog)
 library(blscrapeR)
 
-library(ggvoronoi)
-library(treemap)
-library(d3treeR)
-
-install.packages('d3treeR')
-
 remotes::install_github("d3treeR/d3treeR")
 
 setwd("~/Documents/GitHub/Airport-Analysis/Financial Analysis")
@@ -38,7 +32,7 @@ airlines <- c('AA', 'AS', 'G4', 'HP', 'UA', 'US', 'DL', 'F9', 'TW', 'NK', 'WN', 
 # Overall Operating Expenses by Airline, Year, and Expense Group
 airline_op_exp <- operating_expenses %>%
   replace(is.na(.), 0) %>%
-  filter(CARRIER %in% airlines) %>%
+  filter(CARRIER == 'WN') %>%
   group_by(CARRIER,
            YEAR) %>%
   summarise(SALARIES = sum(SALARIES),
@@ -67,8 +61,14 @@ ggplot(subset(airline_op_exp, METRICS != 'OTHER'),
            y = PCT_TOTAL,
            group = METRICS,
            color = METRICS)) +
-  geom_step(size = 1) + 
-  facet_wrap(~CARRIER)
+  geom_hline(yintercept = 0, linetype = 'dashed') +
+  geom_line(size = 1) +
+  scale_y_continuous(labels = scales::percent) +
+  labs(title = 'What Components Make Up Airline Operating Expenses?',
+       y = 'Percent of Total Operating Expenses',
+       x = 'Year',
+       caption = 'Visualization by Alex Elfering\nSource: Bureau of Transportation Statistics') +
+  theme(legend.position = 'top')
 
 
 # 
@@ -96,47 +96,35 @@ metrics.sub.metrics <- operating_expenses %>%
                   YEAR), 
                names_to = "SUB.METRICS", 
                values_to = "SUB.AMOUNT")  %>%
-  mutate(METRICS = ifelse(SUB.METRICS %in% salaries, "SALARIES", NA),
-         METRICS = ifelse(SUB.METRICS %in% benefits, "BENEFITS", METRICS),
-         METRICS = ifelse(SUB.METRICS %in% materials_purchased, "MATERIALS_TOTAL", METRICS),
-         METRICS = ifelse(SUB.METRICS %in% services_purchased, "SERVICES_TOTAL", METRICS),
-         METRICS = ifelse(SUB.METRICS == "SERVICES_TOTAL", "SERVICES_TOTAL", METRICS),
-         METRICS = ifelse(SUB.METRICS == "LANDING_FEES", "LANDING_FEES", METRICS),
-         METRICS = ifelse(SUB.METRICS == "RENTALS", "RENTALS", METRICS),
-         METRICS = ifelse(SUB.METRICS == "DEPRECIATION", "DEPRECIATION", METRICS),
-         METRICS = ifelse(SUB.METRICS == "AMORTIZATION", "AMORTIZATION", METRICS),
-         METRICS = ifelse(SUB.METRICS == "OTHER", "OTHER", METRICS),
-         METRICS = ifelse(SUB.METRICS == "TRANS_EXPENSE", "TRANS_EXPENSE", METRICS)) %>%
-  filter(CARRIER == 'WN', YEAR == 2019)
+  mutate(METRICS = ifelse(SUB.METRICS %in% salaries, "Salaries", NA),
+         METRICS = ifelse(SUB.METRICS %in% benefits, "Benefits", METRICS),
+         METRICS = ifelse(SUB.METRICS %in% materials_purchased, "Total Materials", METRICS),
+         METRICS = ifelse(SUB.METRICS %in% services_purchased, "Services Purchased", METRICS),
+         METRICS = ifelse(SUB.METRICS == "SERVICES_TOTAL", "Total Services", METRICS),
+         METRICS = ifelse(SUB.METRICS == "LANDING_FEES", "Landing Fees", METRICS),
+         METRICS = ifelse(SUB.METRICS == "RENTALS", "Rentals", METRICS),
+         METRICS = ifelse(SUB.METRICS == "DEPRECIATION", "Depreciation", METRICS),
+         METRICS = ifelse(SUB.METRICS == "AMORTIZATION", "Amoritization", METRICS),
+         METRICS = ifelse(SUB.METRICS == "OTHER", "Other", METRICS),
+         METRICS = ifelse(SUB.METRICS == "TRANS_EXPENSE", "Trans Expense", METRICS)) %>%
+  mutate(SUB.METRICS = gsub('\\_', ' ', SUB.METRICS)) %>%
+  filter(CARRIER == 'WN', 
+         YEAR == 2019) %>%
+  select(METRICS,
+         SUB.METRICS,
+         AMOUNT = SUB.AMOUNT)
 
-# basic treemap
-library(htmltools)
+head(metrics.sub.metrics)
 
-p <- treemap(metrics.sub.metrics,
-             index=c("METRICS","SUB.METRICS"),
-             vSize="SUB.AMOUNT",
-             vColor = "METRICS",
-             type="index",
-             bg.labels=c("white"),
-             align.labels=list(
-               c("center", "center"), 
-               c("center", "center")
-               ),                                   # Where to place labels in the rectangle?
-             overlap.labels=0.5,                      # number between 0 and 1 that determines the tolerance of the overlap between labels. 0 means that labels of lower levels are not printed if higher level labels overlap, 1  means that labels are always printed. In-between values, for instance the default value .5, means that lower level labels are printed if other labels do not overlap with more than .5  times their area size.
-             inflate.labels=F,                        # If true, labels are bigger when rectangle is bigger.
-             )  
-
-# make it interactive ("rootname" becomes the title of the plot):
-browsable(
-  tagList(
-    tags$head(
-      tags$style('text.label{font-size: 12px !important}')
-    ),
-    d3tree(p,
-           rootname = "Components of an Airline' Operating Expenses")
-    ,rootname = "Visualization by Alex Elfering Source: Bureau of Transportation Statistics")
-  )
-
+reactable(metrics.sub.metrics, 
+          groupBy = c("METRICS"), 
+          columns = list(
+            AMOUNT = colDef(aggregate = "sum", 
+                            format = colFormat(currency = "USD", 
+                                               separators = TRUE, 
+                                               digits = 2))
+            )
+          )
 
 ####  Cleaning PnL  ####
 head(pnl_statements, 3)
