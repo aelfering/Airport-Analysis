@@ -117,6 +117,23 @@ metrics.sub.metrics <- operating_expenses %>%
 head(metrics.sub.metrics)
 
 reactable(metrics.sub.metrics, 
+          pagination = FALSE,
+          outlined = TRUE,
+          highlight = TRUE,
+          striped = TRUE,
+          resizable = TRUE,
+          wrap = TRUE,
+          defaultSorted = 'Conference',
+          defaultColDef = colDef(headerClass = "header", 
+                                 align = "left"),
+          style = list(fontFamily = 'Arial', 
+                       fontSize = '14px'),
+          theme = reactableTheme(
+            headerStyle = list(
+              "&:hover[aria-sort]" = list(background = "hsl(0, 0%, 96%)"),
+              "&[aria-sort='ascending'], &[aria-sort='descending']" = list(background = "hsl(0, 0%, 96%)"),
+              borderColor = "#555"
+            )),
           groupBy = c("METRICS"), 
           columns = list(
             AMOUNT = colDef(aggregate = "sum", 
