@@ -108,11 +108,16 @@ metrics.sub.metrics <- operating_expenses %>%
          METRICS = ifelse(SUB.METRICS == "OTHER", "Other", METRICS),
          METRICS = ifelse(SUB.METRICS == "TRANS_EXPENSE", "Trans Expense", METRICS)) %>%
   mutate(SUB.METRICS = gsub('\\_', ' ', SUB.METRICS)) %>%
-  filter(CARRIER == 'WN', 
-         YEAR == 2019) %>%
+  filter(CARRIER == 'UA', 
+         YEAR == 2020) %>%
+  group_by(METRICS) %>%
+  mutate(TOTAL = sum(SUB.AMOUNT)) %>%
+  ungroup() %>%
+  mutate(PCT.TOTAL = SUB.AMOUNT/TOTAL) %>%
   select(METRICS,
          SUB.METRICS,
-         AMOUNT = SUB.AMOUNT)
+         AMOUNT = SUB.AMOUNT,
+         PCT.TOTAL)
 
 head(metrics.sub.metrics)
 
@@ -123,7 +128,6 @@ reactable(metrics.sub.metrics,
           striped = TRUE,
           resizable = TRUE,
           wrap = TRUE,
-          defaultSorted = 'Conference',
           defaultColDef = colDef(headerClass = "header", 
                                  align = "left"),
           style = list(fontFamily = 'Arial', 
@@ -136,10 +140,13 @@ reactable(metrics.sub.metrics,
             )),
           groupBy = c("METRICS"), 
           columns = list(
+            METRICS = colDef(footer = "Total"),
             AMOUNT = colDef(aggregate = "sum", 
                             format = colFormat(currency = "USD", 
                                                separators = TRUE, 
-                                               digits = 2))
+                                               digits = 2)),
+            PCT.TOTAL = colDef(aggregate = "sum",
+                               format = colFormat(percent = TRUE, digits = 2))
             )
           )
 
