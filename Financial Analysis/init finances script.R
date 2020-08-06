@@ -108,7 +108,7 @@ metrics.sub.metrics <- operating_expenses %>%
          METRICS = ifelse(SUB.METRICS == "OTHER", "Other", METRICS),
          METRICS = ifelse(SUB.METRICS == "TRANS_EXPENSE", "Trans Expense", METRICS)) %>%
   mutate(SUB.METRICS = gsub('\\_', ' ', SUB.METRICS)) %>%
-  filter(CARRIER == 'UA', 
+  filter(CARRIER == 'DL', 
          YEAR == 2020) %>%
   group_by(METRICS) %>%
   mutate(TOTAL = sum(SUB.AMOUNT)) %>%
@@ -127,7 +127,8 @@ bar_chart <- function(label, width = "100%", height = "16px", fill = "#00bfc4", 
   div(style = list(display = "flex", alignItems = "center"), label, chart)
 }
 
-reactable(metrics.sub.metrics, 
+reactable(# Themes
+          metrics.sub.metrics, 
           pagination = FALSE,
           outlined = TRUE,
           highlight = TRUE,
@@ -144,22 +145,28 @@ reactable(metrics.sub.metrics,
               "&[aria-sort='ascending'], &[aria-sort='descending']" = list(background = "hsl(0, 0%, 96%)"),
               borderColor = "#555"
             )),
+          
+          # Column formatting
           groupBy = c("METRICS"), 
           columns = list(
-            METRICS = colDef(footer = "Total"),
             AMOUNT = colDef(aggregate = "sum", 
                             format = colFormat(currency = "USD", 
                                                separators = TRUE, 
                                                digits = 2)),
             PCT.TOTAL = colDef(aggregate = "sum",
                                align = "right",
-                               format = colFormat(percent = TRUE, digits = 2),
+                               defaultSortOrder = "desc",
+                               colFormat(percent = TRUE, 
+                                         digits = 2),
                                cell = function(value) {
                                  width <- paste0(value / max(metrics.sub.metrics$PCT.TOTAL) * 100, "%")
-                                 bar_chart(value, width = width, fill = "#fc5185", background = "#e1e1e1")
-                               })
+                                 bar_chart(value, width = width)
+                               }
+                               )
             )
-          )
+)
+
+
 
 ####  Cleaning PnL  ####
 head(pnl_statements, 3)
