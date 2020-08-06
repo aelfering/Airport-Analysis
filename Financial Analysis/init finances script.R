@@ -121,6 +121,12 @@ metrics.sub.metrics <- operating_expenses %>%
 
 head(metrics.sub.metrics)
 
+bar_chart <- function(label, width = "100%", height = "16px", fill = "#00bfc4", background = NULL) {
+  bar <- div(style = list(background = fill, width = width, height = height))
+  chart <- div(style = list(flexGrow = 1, marginLeft = "8px", background = background), bar)
+  div(style = list(display = "flex", alignItems = "center"), label, chart)
+}
+
 reactable(metrics.sub.metrics, 
           pagination = FALSE,
           outlined = TRUE,
@@ -146,7 +152,12 @@ reactable(metrics.sub.metrics,
                                                separators = TRUE, 
                                                digits = 2)),
             PCT.TOTAL = colDef(aggregate = "sum",
-                               format = colFormat(percent = TRUE, digits = 2))
+                               align = "right",
+                               format = colFormat(percent = TRUE, digits = 2),
+                               cell = function(value) {
+                                 width <- paste0(value / max(metrics.sub.metrics$PCT.TOTAL) * 100, "%")
+                                 bar_chart(value, width = width, fill = "#fc5185", background = "#e1e1e1")
+                               })
             )
           )
 
