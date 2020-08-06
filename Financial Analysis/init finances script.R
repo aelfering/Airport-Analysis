@@ -113,8 +113,11 @@ metrics.sub.metrics <- operating_expenses %>%
   group_by(METRICS) %>%
   mutate(TOTAL = sum(SUB.AMOUNT)) %>%
   ungroup() %>%
-  mutate(PCT.TOTAL = SUB.AMOUNT/TOTAL) %>%
+  mutate(PCT.TOTAL = SUB.AMOUNT/TOTAL,
+         GRAND.TOTAL = sum(SUB.AMOUNT),
+         PCT.GRAND = TOTAL/GRAND.TOTAL) %>%
   select(METRICS,
+         PCT.GRAND,
          SUB.METRICS,
          AMOUNT = SUB.AMOUNT,
          PCT.TOTAL)
@@ -126,6 +129,8 @@ bar_chart <- function(label, width = "100%", height = "16px", fill = "#00bfc4", 
   chart <- div(style = list(flexGrow = 1, marginLeft = "8px", background = background), bar)
   div(style = list(display = "flex", alignItems = "center"), label, chart)
 }
+
+orange_pal <- function(x) rgb(colorRamp(c("#ffe4cc", "#ff9500"))(x), maxColorValue = 255)
 
 reactable(# Themes
           metrics.sub.metrics, 
@@ -153,16 +158,18 @@ reactable(# Themes
                             format = colFormat(currency = "USD", 
                                                separators = TRUE, 
                                                digits = 2)),
-            PCT.TOTAL = colDef(aggregate = "sum",
-                               align = "right",
-                               defaultSortOrder = "desc",
-                               colFormat(percent = TRUE, 
-                                         digits = 2),
-                               cell = function(value) {
-                                 width <- paste0(value / max(metrics.sub.metrics$PCT.TOTAL) * 100, "%")
-                                 bar_chart(value, width = width)
-                               }
-                               )
+            PCT.GRAND = colDef(aggregate = "max", 
+                               format = colFormat(percent = TRUE, 
+                                                  digits = 2)),
+            
+            PCT.TOTAL = colDef(aggregate = 'sum',
+                               format = colFormat(percent = TRUE, 
+                                                  digits = 2),
+              style = function(value) {
+              normalized <- (value - min(metrics.sub.metrics$PCT.TOTAL)) / (max(metrics.sub.metrics$PCT.TOTAL) - min(metrics.sub.metrics$PCT.TOTAL))
+              color <- orange_pal(normalized)
+              list(background = color)
+            })
             )
 )
 
