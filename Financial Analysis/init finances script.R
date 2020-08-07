@@ -162,7 +162,7 @@ reactable(# Themes
           pagination = FALSE,
           outlined = TRUE,
           highlight = TRUE,
-          striped = TRUE,
+          #striped = TRUE,
           resizable = TRUE,
           wrap = TRUE,
           defaultColDef = colDef(headerClass = "header", 
