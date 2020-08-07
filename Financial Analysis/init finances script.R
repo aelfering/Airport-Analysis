@@ -27,9 +27,9 @@ current_cpi_int <- as.numeric(current_cpi)
 ####  Cleaning Operating Expenses ####
 
 # Airline filter
-CARRIER_NM <- 'TW'
-YEAR_INT <- 1991
-PY_YEAR <- 1990
+CARRIER_NM <- 'UA'
+YEAR_INT <- 2006
+PY_YEAR <- YEAR_INT-1
   
 # Overall Operating Expenses by Airline, Year, and Expense Group
 airline_op_exp <- operating_expenses %>%
@@ -82,6 +82,45 @@ services_purchased <- c("ADVERTISING", "COMMUNICATION", "INSURANCE", "OUTSIDE_EQ
 columns_to_not_select <- c("AIRLINE_ID", "UNIQUE_CARRIER", "UNIQUE_CARRIER_NAME", "OP_EXPENSE", "UNIQUE_CARRIER_ENTITY", "REGION", "CARRIER_GROUP_NEW", "CARRIER_GROUP", "QUARTER", "X",
                            "SALARIES_BENEFITS", "SALARIES", "BENEFITS", "MATERIALS_TOTAL", "SERVICES_TOTAL")
 
+py_op_expenses <- operating_expenses %>%
+  filter(CARRIER == CARRIER_NM, 
+         YEAR == PY_YEAR) %>%
+  replace(is.na(.), 0) %>%
+  select(-columns_to_not_select) %>%
+  group_by(CARRIER, 
+           CARRIER_NAME, 
+           YEAR) %>%
+  summarise_all(sum) %>%
+  ungroup() %>%
+  pivot_longer(-c(CARRIER, 
+                  CARRIER_NAME, 
+                  YEAR), 
+               names_to = "SUB.METRICS", 
+               values_to = "SUB.AMOUNT")  %>%
+  mutate(METRICS = ifelse(SUB.METRICS %in% salaries, "Salaries", NA),
+         METRICS = ifelse(SUB.METRICS %in% benefits, "Benefits", METRICS),
+         METRICS = ifelse(SUB.METRICS %in% materials_purchased, "Total Materials", METRICS),
+         METRICS = ifelse(SUB.METRICS %in% services_purchased, "Services Purchased", METRICS),
+         METRICS = ifelse(SUB.METRICS == "SERVICES_TOTAL", "Total Services", METRICS),
+         METRICS = ifelse(SUB.METRICS == "LANDING_FEES", "Landing Fees", METRICS),
+         METRICS = ifelse(SUB.METRICS == "RENTALS", "Rentals", METRICS),
+         METRICS = ifelse(SUB.METRICS == "DEPRECIATION", "Depreciation", METRICS),
+         METRICS = ifelse(SUB.METRICS == "AMORTIZATION", "Amoritization", METRICS),
+         METRICS = ifelse(SUB.METRICS == "OTHER", "Other", METRICS),
+         METRICS = ifelse(SUB.METRICS == "TRANS_EXPENSE", "Trans Expense", METRICS)) %>%
+  mutate(SUB.METRICS = gsub('\\_', ' ', SUB.METRICS)) %>%
+  group_by(METRICS) %>%
+  mutate(TOTAL = sum(SUB.AMOUNT)) %>%
+  ungroup() %>%
+  mutate(PCT.TOTAL = SUB.AMOUNT/TOTAL,
+         GRAND.TOTAL = sum(SUB.AMOUNT),
+         PCT.GRAND = SUB.AMOUNT/GRAND.TOTAL) %>%
+  select(METRICS,
+         SUB.METRICS,
+         PY_AMOUNT = SUB.AMOUNT,
+         PY_PCT.GRAND = PCT.GRAND,
+         PY_PCT.TOTAL = PCT.TOTAL)
+
 metrics.sub.metrics <- operating_expenses %>%
   filter(CARRIER == CARRIER_NM, 
          YEAR == YEAR_INT) %>%
@@ -119,7 +158,9 @@ metrics.sub.metrics <- operating_expenses %>%
          SUB.METRICS,
          AMOUNT = SUB.AMOUNT,
          PCT.GRAND,
-         PCT.TOTAL)
+         PCT.TOTAL) %>%
+  full_join(py_op_expenses, by = c('METRICS' = 'METRICS', 'SUB.METRICS' = 'SUB.METRICS')) %>%
+  mutate(YOY = (AMOUNT-PY_AMOUNT)/PY_AMOUNT)
 
 metrics.sub.metrics$PCT.TOTAL[is.nan(metrics.sub.metrics$PCT.TOTAL)]<-0
 
