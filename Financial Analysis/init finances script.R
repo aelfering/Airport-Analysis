@@ -27,8 +27,8 @@ current_cpi_int <- as.numeric(current_cpi)
 ####  Cleaning Operating Expenses ####
 
 # Airline filter
-CARRIER_NM <- 'UA'
-YEAR_INT <- 2002
+CARRIER_NM <- 'US'
+YEAR_INT <- 2004
 PY_YEAR <- YEAR_INT-1
   
 # Overall Operating Expenses by Airline, Year, and Expense Group
@@ -227,14 +227,15 @@ reactable(# Themes
           groupBy = c("METRICS"), 
           columns = list(
             AMOUNT = colDef(aggregate = "sum", 
+                            name = 'Operating Expenses',
                             format = colFormat(currency = "USD", 
                                                separators = TRUE, 
                                                digits = 2)),
-            YOY = colDef(name = "Last Year", 
-                                        format = colFormat(digits = 2,
-                                                           percent = TRUE),
-                                        #aggregate = 'sum',
-                                        maxWidth = 90),
+            YOY = colDef(name = "YOY",
+                         format = colFormat(digits = 2,
+                                            percent = TRUE),
+                         #aggregate = 'sum',
+                         maxWidth = 90),
             PCT.GRAND = knockout_column(name = "Percent of Total Expenses", 
                                         format = colFormat(digits = 2,
                                                            percent = TRUE),
