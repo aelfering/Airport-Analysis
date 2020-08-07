@@ -226,8 +226,11 @@ reactable(# Themes
           # Column formatting
           groupBy = c("METRICS"), 
           columns = list(
+            METRICS = colDef(footer = "Total Operating Expenses"),
+            #AMOUNT = colDef(footer = function(values) sprintf("$%.2f", sum(values))),
             AMOUNT = colDef(aggregate = "sum", 
                             name = 'Operating Expenses',
+                            footer = function(values) sprintf("$%.2f", sum(values)),
                             align = 'right',
                             format = colFormat(currency = "USD", 
                                                separators = TRUE, 
