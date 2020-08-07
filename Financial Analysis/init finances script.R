@@ -28,7 +28,7 @@ current_cpi_int <- as.numeric(current_cpi)
 
 # Airline filter
 CARRIER_NM <- 'UA'
-YEAR_INT <- 2006
+YEAR_INT <- 2002
 PY_YEAR <- YEAR_INT-1
   
 # Overall Operating Expenses by Airline, Year, and Expense Group
@@ -160,7 +160,13 @@ metrics.sub.metrics <- operating_expenses %>%
          PCT.GRAND,
          PCT.TOTAL) %>%
   full_join(py_op_expenses, by = c('METRICS' = 'METRICS', 'SUB.METRICS' = 'SUB.METRICS')) %>%
-  mutate(YOY = (AMOUNT-PY_AMOUNT)/PY_AMOUNT)
+  mutate(YOY = (AMOUNT-PY_AMOUNT)/PY_AMOUNT) %>%
+  select(METRICS,
+         SUB.METRICS,
+         AMOUNT,
+         YOY,
+         PCT.GRAND,
+         PCT.TOTAL)
 
 metrics.sub.metrics$PCT.TOTAL[is.nan(metrics.sub.metrics$PCT.TOTAL)]<-0
 
@@ -224,6 +230,11 @@ reactable(# Themes
                             format = colFormat(currency = "USD", 
                                                separators = TRUE, 
                                                digits = 2)),
+            YOY = colDef(name = "Last Year", 
+                                        format = colFormat(digits = 2,
+                                                           percent = TRUE),
+                                        #aggregate = 'sum',
+                                        maxWidth = 90),
             PCT.GRAND = knockout_column(name = "Percent of Total Expenses", 
                                         format = colFormat(digits = 2,
                                                            percent = TRUE),
