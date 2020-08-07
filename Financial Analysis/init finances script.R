@@ -108,29 +108,55 @@ metrics.sub.metrics <- operating_expenses %>%
          METRICS = ifelse(SUB.METRICS == "OTHER", "Other", METRICS),
          METRICS = ifelse(SUB.METRICS == "TRANS_EXPENSE", "Trans Expense", METRICS)) %>%
   mutate(SUB.METRICS = gsub('\\_', ' ', SUB.METRICS)) %>%
-  filter(CARRIER == 'DL', 
-         YEAR == 2020) %>%
+  filter(CARRIER == 'G4', 
+         YEAR == 2004) %>%
   group_by(METRICS) %>%
   mutate(TOTAL = sum(SUB.AMOUNT)) %>%
   ungroup() %>%
   mutate(PCT.TOTAL = SUB.AMOUNT/TOTAL,
          GRAND.TOTAL = sum(SUB.AMOUNT),
-         PCT.GRAND = TOTAL/GRAND.TOTAL) %>%
+         PCT.GRAND = SUB.AMOUNT/GRAND.TOTAL) %>%
   select(METRICS,
-         PCT.GRAND,
          SUB.METRICS,
          AMOUNT = SUB.AMOUNT,
+         PCT.GRAND,
          PCT.TOTAL)
+
+metrics.sub.metrics$PCT.TOTAL[is.nan(metrics.sub.metrics$PCT.TOTAL)]<-0
 
 head(metrics.sub.metrics)
 
-bar_chart <- function(label, width = "100%", height = "16px", fill = "#00bfc4", background = NULL) {
-  bar <- div(style = list(background = fill, width = width, height = height))
-  chart <- div(style = list(flexGrow = 1, marginLeft = "8px", background = background), bar)
-  div(style = list(display = "flex", alignItems = "center"), label, chart)
+knockout_column <- function(maxWidth = 70, class = NULL, ...) {
+  colDef(
+    cell = format_pct,
+    maxWidth = maxWidth,
+    class = paste("cell number", class),
+    style = function(value) {
+      # Lighter color for <1%
+      if (value < 0.01) {
+        list(color = "#aaa")
+      } else {
+        list(color = "#111", background = knockout_pct_color(value))
+      }
+    },
+    ...
+  )
+}
+format_pct <- function(value) {
+  if (value == 0) "  \u2013 "    # en dash for 0%
+  else if (value == 1) "\u2713"  # checkmark for 100%
+  else if (value < 0.01) " <1%"
+  else if (value > 0.99) ">99%"
+  else formatC(paste0(round(value * 100), "%"), width = 4)
+}
+make_color_pal <- function(colors, bias = 1) {
+  get_color <- colorRamp(colors, bias = bias)
+  function(x) rgb(get_color(x), maxColorValue = 255)
 }
 
-orange_pal <- function(x) rgb(colorRamp(c("#ffe4cc", "#ff9500"))(x), maxColorValue = 255)
+off_rating_color <- make_color_pal(c("#ff2700", "#f8fcf8", "#44ab43"), bias = 1.3)
+def_rating_color <- make_color_pal(c("#ff2700", "#f8fcf8", "#44ab43"), bias = 0.6)
+knockout_pct_color <- make_color_pal(c("#ffffff", "#f2fbd2", "#c9ecb4", "#93d3ab", "#35b0ab"), bias = 2)
 
 reactable(# Themes
           metrics.sub.metrics, 
@@ -158,18 +184,11 @@ reactable(# Themes
                             format = colFormat(currency = "USD", 
                                                separators = TRUE, 
                                                digits = 2)),
-            PCT.GRAND = colDef(aggregate = "max", 
-                               format = colFormat(percent = TRUE, 
-                                                  digits = 2)),
-            
-            PCT.TOTAL = colDef(aggregate = 'sum',
-                               format = colFormat(percent = TRUE, 
-                                                  digits = 2),
-              style = function(value) {
-              normalized <- (value - min(metrics.sub.metrics$PCT.TOTAL)) / (max(metrics.sub.metrics$PCT.TOTAL) - min(metrics.sub.metrics$PCT.TOTAL))
-              color <- orange_pal(normalized)
-              list(background = color)
-            })
+            PCT.GRAND = knockout_column(name = "Percent of Total Expenses", 
+                                        aggregate = 'sum',
+                                        maxWidth = 90),
+            PCT.TOTAL = knockout_column(name = "Percent of Total Metric", 
+                                        maxWidth = 90)
             )
 )
 
