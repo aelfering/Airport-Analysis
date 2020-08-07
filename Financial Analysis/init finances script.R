@@ -254,7 +254,7 @@ reactable(# Themes
                                         aggregate = 'sum',
                                         maxWidth = 90)
             )
-)
+          )
 
 
 
