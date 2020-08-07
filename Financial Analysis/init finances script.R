@@ -27,12 +27,14 @@ current_cpi_int <- as.numeric(current_cpi)
 ####  Cleaning Operating Expenses ####
 
 # Airline filter
-airlines <- c('AA', 'AS', 'G4', 'HP', 'UA', 'US', 'DL', 'F9', 'TW', 'NK', 'WN', 'VX', 'B6', 'NW')
-
+CARRIER_NM <- 'TW'
+YEAR_INT <- 1991
+PY_YEAR <- 1990
+  
 # Overall Operating Expenses by Airline, Year, and Expense Group
 airline_op_exp <- operating_expenses %>%
   replace(is.na(.), 0) %>%
-  filter(CARRIER == 'WN') %>%
+  filter(CARRIER == CARRIER_NM) %>%
   group_by(CARRIER,
            YEAR) %>%
   summarise(SALARIES = sum(SALARIES),
@@ -61,19 +63,17 @@ ggplot(subset(airline_op_exp, METRICS != 'OTHER'),
            y = PCT_TOTAL,
            group = METRICS,
            color = METRICS)) +
-  geom_hline(yintercept = 0, linetype = 'dashed') +
+  geom_hline(yintercept = 0, 
+             linetype = 'dashed') +
   geom_line(size = 1) +
+  geom_vline(xintercept = YEAR_INT, 
+             linetype = 'dashed') +
   scale_y_continuous(labels = scales::percent) +
   labs(title = 'What Components Make Up Airline Operating Expenses?',
        y = 'Percent of Total Operating Expenses',
        x = 'Year',
        caption = 'Visualization by Alex Elfering\nSource: Bureau of Transportation Statistics') +
   theme(legend.position = 'top')
-
-
-# 
-colnames(operating_expenses)
-str(operating_expenses)
 
 salaries <- c("SALARIES_MGT", "SALARIES_FLIGHT", "SALARIES_MAINT", "SALARIES_TRAFFIC", "SALARIES_OTHER")
 benefits <- c("BENEFITS_PERSONNEL", "BENEFITS_PENSIONS", "BENEFITS_PAYROLL", "BENEFITS")
@@ -83,7 +83,8 @@ columns_to_not_select <- c("AIRLINE_ID", "UNIQUE_CARRIER", "UNIQUE_CARRIER_NAME"
                            "SALARIES_BENEFITS", "SALARIES", "BENEFITS", "MATERIALS_TOTAL", "SERVICES_TOTAL")
 
 metrics.sub.metrics <- operating_expenses %>%
-  filter(CARRIER %in% airlines) %>%
+  filter(CARRIER == CARRIER_NM, 
+         YEAR == YEAR_INT) %>%
   replace(is.na(.), 0) %>%
   select(-columns_to_not_select) %>%
   group_by(CARRIER, 
@@ -108,8 +109,6 @@ metrics.sub.metrics <- operating_expenses %>%
          METRICS = ifelse(SUB.METRICS == "OTHER", "Other", METRICS),
          METRICS = ifelse(SUB.METRICS == "TRANS_EXPENSE", "Trans Expense", METRICS)) %>%
   mutate(SUB.METRICS = gsub('\\_', ' ', SUB.METRICS)) %>%
-  filter(CARRIER == 'G4', 
-         YEAR == 2004) %>%
   group_by(METRICS) %>%
   mutate(TOTAL = sum(SUB.AMOUNT)) %>%
   ungroup() %>%
