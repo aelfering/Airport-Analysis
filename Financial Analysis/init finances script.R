@@ -185,9 +185,14 @@ reactable(# Themes
                                                separators = TRUE, 
                                                digits = 2)),
             PCT.GRAND = knockout_column(name = "Percent of Total Expenses", 
+                                        format = colFormat(digits = 2,
+                                                           percent = TRUE),
                                         aggregate = 'sum',
                                         maxWidth = 90),
             PCT.TOTAL = knockout_column(name = "Percent of Total Metric", 
+                                        format = colFormat(digits = 2,
+                                                           percent = TRUE),
+                                        aggregate = 'sum',
                                         maxWidth = 90)
             )
 )
