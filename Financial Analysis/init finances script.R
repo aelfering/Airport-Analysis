@@ -27,8 +27,8 @@ current_cpi_int <- as.numeric(current_cpi)
 ####  Cleaning Operating Expenses ####
 
 # Airline filter
-CARRIER_NM <- 'US'
-YEAR_INT <- 2004
+CARRIER_NM <- 'DL'
+YEAR_INT <- 2015
 PY_YEAR <- YEAR_INT-1
   
 # Overall Operating Expenses by Airline, Year, and Expense Group
@@ -190,9 +190,9 @@ knockout_column <- function(maxWidth = 70, class = NULL, ...) {
 }
 format_pct <- function(value) {
   if (value == 0) "  \u2013 "    # en dash for 0%
-  else if (value == 1) "\u2713"  # checkmark for 100%
+  #else if (value == 1) "\u2713"  # checkmark for 100%
   else if (value < 0.01) " <1%"
-  else if (value > 0.99) ">99%"
+  #else if (value > 0.99) ">99%"
   else formatC(paste0(round(value * 100), "%"), width = 4)
 }
 make_color_pal <- function(colors, bias = 1) {
@@ -228,20 +228,24 @@ reactable(# Themes
           columns = list(
             AMOUNT = colDef(aggregate = "sum", 
                             name = 'Operating Expenses',
+                            align = 'right',
                             format = colFormat(currency = "USD", 
                                                separators = TRUE, 
                                                digits = 2)),
             YOY = colDef(name = "YOY",
+                         align = 'right',
                          format = colFormat(digits = 2,
                                             percent = TRUE),
                          #aggregate = 'sum',
                          maxWidth = 90),
             PCT.GRAND = knockout_column(name = "Percent of Total Expenses", 
+                                        align = 'right',
                                         format = colFormat(digits = 2,
                                                            percent = TRUE),
                                         aggregate = 'sum',
                                         maxWidth = 90),
             PCT.TOTAL = knockout_column(name = "Percent of Total Metric", 
+                                        align = 'right',
                                         format = colFormat(digits = 2,
                                                            percent = TRUE),
                                         aggregate = 'sum',
