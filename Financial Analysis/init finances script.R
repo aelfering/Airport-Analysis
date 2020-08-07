@@ -27,8 +27,8 @@ current_cpi_int <- as.numeric(current_cpi)
 ####  Cleaning Operating Expenses ####
 
 # Airline filter
-CARRIER_NM <- 'DL'
-YEAR_INT <- 2015
+CARRIER_NM <- 'AA'
+YEAR_INT <- 1991
 PY_YEAR <- YEAR_INT-1
   
 # Overall Operating Expenses by Airline, Year, and Expense Group
