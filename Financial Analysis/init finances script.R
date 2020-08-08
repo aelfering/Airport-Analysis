@@ -191,13 +191,13 @@ knockout_column <- function(maxWidth = 70, class = NULL, ...) {
 }
 yoy_column <- function(maxWidth = 70, class = NULL, ...) {
   colDef(
-    cell = yoy_format_pct,
+    cell = format_pct,
     maxWidth = maxWidth,
     class = paste("cell number", class),
     style = function(value) {
       # Lighter color for <1%
       if (value < 0.01) {
-        list(color = "#aaa")
+        list(color = "#111")
       } else {
         list(color = "#111", background = yoy_change(value))
       }
@@ -223,7 +223,7 @@ make_color_pal <- function(colors, bias = 1) {
 off_rating_color <- make_color_pal(c("#ff2700", "#f8fcf8", "#44ab43"), bias = 1.3)
 def_rating_color <- make_color_pal(c("#ff2700", "#f8fcf8", "#44ab43"), bias = 0.6)
 knockout_pct_color <- make_color_pal(c("#ffffff", "#f2fbd2", "#c9ecb4", "#93d3ab", "#35b0ab"), bias = 2)
-yoy_change <- make_color_pal(c('#c40013', '#ef956e', '#fdfdfd', '#80abfc', '#004ff0'), bias = 2)
+yoy_change <- make_color_pal(c('#c40013', '#fdfdfd', '#004ff0'), bias = 2)
 
 reactable(# Themes
           metrics.sub.metrics, 
