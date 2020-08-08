@@ -28,8 +28,8 @@ current_cpi_int <- as.numeric(current_cpi)
 ####  Cleaning Operating Expenses ####
 
 # Airline filter
-CARRIER_NM <- 'AA'
-YEAR_INT <- 1991
+CARRIER_NM <- 'G4'
+YEAR_INT <- 2018
 PY_YEAR <- YEAR_INT-1
   
 # Overall Operating Expenses by Airline, Year, and Expense Group
@@ -170,6 +170,8 @@ metrics.sub.metrics <- operating_expenses %>%
          PCT.TOTAL)
 
 metrics.sub.metrics$PCT.TOTAL[is.nan(metrics.sub.metrics$PCT.TOTAL)]<-0
+metrics.sub.metrics$YOY[is.nan(metrics.sub.metrics$YOY)]<- 0
+
 
 head(metrics.sub.metrics)
 
@@ -194,7 +196,7 @@ format_pct <- function(value) {
   #else if (value == 1) "\u2713"  # checkmark for 100%
   else if (value < 0.01) " <1%"
   #else if (value > 0.99) ">99%"
-  else formatC(paste0(round(value * 100), "%"), width = 4)
+  else formatC(paste0(round(value * 100, 2), "%"), width = 4)
 }
 make_color_pal <- function(colors, bias = 1) {
   get_color <- colorRamp(colors, bias = bias)
@@ -206,11 +208,14 @@ knockout_pct_color <- make_color_pal(c("#ffffff", "#f2fbd2", "#c9ecb4", "#93d3ab
 reactable(# Themes
           metrics.sub.metrics, 
           pagination = FALSE,
-          outlined = TRUE,
+          #outlined = TRUE,
           highlight = TRUE,
           #striped = TRUE,
           resizable = TRUE,
           wrap = TRUE,
+          borderless = TRUE,
+          defaultSorted = list(PCT.GRAND = "desc", 
+                               METRICS = "desc"),
           defaultColDef = colDef(headerClass = "header", 
                                  align = "left"),
           style = list(fontFamily = 'Arial', 
@@ -235,10 +240,11 @@ reactable(# Themes
                                                separators = TRUE, 
                                                digits = 2)),
             YOY =  colDef(
+              align = 'right',
               format = colFormat(digits = 2,
                                  percent = TRUE),
               cell = function(value) {
-                if (value >= 0) paste0("+", round(value, 2)*100, '%') else paste0(round(value, 2)*100, '%')
+                if (value > 0) paste0("+", round(value, 4)*100, '%') else paste0(round(value, 4)*100, '%')
                 },
               style = function(value) {
                 color <- if (value > 0) {
