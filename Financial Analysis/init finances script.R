@@ -28,8 +28,8 @@ current_cpi_int <- as.numeric(current_cpi)
 ####  Cleaning Operating Expenses ####
 
 # Airline filter
-CARRIER_NM <- 'NK'
-YEAR_INT <- 2019
+CARRIER_NM <- 'UA'
+YEAR_INT <- 2005
 QUARTERS <- c(1)
 PY_YEAR <- YEAR_INT-1
   
@@ -169,9 +169,10 @@ metrics.sub.metrics <- operating_expenses %>%
   select(METRICS,
          SUB.METRICS,
          AMOUNT,
+         PY_AMOUNT,
          YOY,
-         PCT.GRAND,
-         PCT.TOTAL)
+         PCT.TOTAL,
+         PCT.GRAND)
 
 metrics.sub.metrics$PCT.TOTAL[is.nan(metrics.sub.metrics$PCT.TOTAL)]<-0
 metrics.sub.metrics$YOY[is.nan(metrics.sub.metrics$YOY)]<- 0
@@ -234,9 +235,27 @@ reactable(# Themes
                             format = colFormat(currency = "USD", 
                                                separators = TRUE, 
                                                digits = 2)),
-            YOY =  colDef(
-              align = 'left',
-              maxWidth = 90,
+            PY_AMOUNT = colDef(aggregate = "sum", 
+                            maxWidth = 200,
+                            name = 'LY Operating Expenses',
+                            footer = function(values) paste('$', 
+                                                            formatC(sum(values), format="f", big.mark = ",", digits=2), 
+                                                            sep = ''),
+                            align = 'left',
+                            format = colFormat(currency = "USD", 
+                                               separators = TRUE, 
+                                               digits = 2)),
+            YOY = colDef(
+              # Calculate the aggregate Avg.Price as `sum(Price) / sum(Units)`
+              aggregate = JS("function(values, rows) {
+              var amount = 0
+              var py_amount = 0
+              rows.forEach(function(row) {
+              amount += row['AMOUNT']
+              py_amount += row['PY_AMOUNT']
+              })
+              return (amount-py_amount) / py_amount
+                             }"),
               format = colFormat(digits = 2,
                                  percent = TRUE),
               cell = function(value) {
@@ -249,7 +268,8 @@ reactable(# Themes
                   "#e00000"
                 }
                 list(fontWeight = 600, color = color)
-              }),
+              }
+            ),
             PCT.GRAND = knockout_column(name = "Percent of Total Expenses", 
                                         align = 'left',
                                         format = colFormat(digits = 2,
@@ -260,7 +280,6 @@ reactable(# Themes
                                         align = 'left',
                                         format = colFormat(digits = 2,
                                                            percent = TRUE),
-                                        aggregate = 'sum',
                                         maxWidth = 170),
           rowStyle = JS("function(rowInfo) {
           if (rowInfo.level > 0) {
