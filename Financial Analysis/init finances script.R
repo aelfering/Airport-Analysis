@@ -207,25 +207,13 @@ knockout_pct_color <- make_color_pal(c("#ffffff", "#f2fbd2", "#c9ecb4", "#93d3ab
 
 reactable(# Themes
           metrics.sub.metrics, 
-          pagination = FALSE,
-          #outlined = TRUE,
           highlight = TRUE,
-          #striped = TRUE,
-          resizable = TRUE,
           wrap = TRUE,
-          borderless = TRUE,
-          defaultSorted = list(PCT.GRAND = "desc", 
-                               METRICS = "desc"),
+          outlined = TRUE,
           defaultColDef = colDef(headerClass = "header", 
                                  align = "left"),
           style = list(fontFamily = 'Arial', 
                        fontSize = '14px'),
-          theme = reactableTheme(
-            headerStyle = list(
-              "&:hover[aria-sort]" = list(background = "hsl(0, 0%, 96%)"),
-              "&[aria-sort='ascending'], &[aria-sort='descending']" = list(background = "hsl(0, 0%, 96%)"),
-              borderColor = "#555"
-            )),
           
           # Column formatting
           groupBy = c("METRICS"), 
@@ -267,7 +255,14 @@ reactable(# Themes
                                                            percent = TRUE),
                                         aggregate = 'sum',
                                         maxWidth = 90)
-            )
+            ),
+          rowStyle = JS("function(rowInfo) {
+          if (rowInfo.level > 0) {
+          return { background: '#fff', borderLeft: '2px solid #000000' }
+          } else {
+          return { borderLeft: '1px solid transparent' }
+          }
+                        }")
           )
 
 
