@@ -258,7 +258,7 @@ reactable(# Themes
             ),
           rowStyle = JS("function(rowInfo) {
           if (rowInfo.level > 0) {
-          return { background: '#fff', borderLeft: '2px solid #000000' }
+          return { borderLeft: '2px solid #000000' }
           } else {
           return { borderLeft: '1px solid transparent' }
           }
