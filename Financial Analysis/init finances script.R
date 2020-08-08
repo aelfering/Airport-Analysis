@@ -28,8 +28,8 @@ current_cpi_int <- as.numeric(current_cpi)
 ####  Cleaning Operating Expenses ####
 
 # Airline filter
-CARRIER_NM <- 'G4'
-YEAR_INT <- 2018
+CARRIER_NM <- 'AS'
+YEAR_INT <- 2019
 PY_YEAR <- YEAR_INT-1
   
 # Overall Operating Expenses by Airline, Year, and Expense Group
@@ -211,7 +211,8 @@ reactable(# Themes
           wrap = TRUE,
           outlined = TRUE,
           defaultColDef = colDef(headerClass = "header", 
-                                 align = "left"),
+                                 align = "left",
+                                 footerStyle = list(fontWeight = "bold")),
           style = list(fontFamily = 'Arial', 
                        fontSize = '14px'),
           
@@ -219,10 +220,9 @@ reactable(# Themes
           groupBy = c("METRICS"), 
           columns = list(
             METRICS = colDef(footer = "Total Operating Expenses"),
-            #AMOUNT = colDef(footer = function(values) sprintf("$%.2f", sum(values))),
             AMOUNT = colDef(aggregate = "sum", 
                             name = 'Operating Expenses',
-                            footer = function(values) sprintf("$%.2f", sum(values)),
+                            footer = function(values) paste('$', formatC(sum(values), format="f", big.mark = ",", digits=2), sep = ''),
                             align = 'right',
                             format = colFormat(currency = "USD", 
                                                separators = TRUE, 
@@ -264,8 +264,6 @@ reactable(# Themes
           }
                         }")
           )
-
-
 
 ####  Cleaning PnL  ####
 head(pnl_statements, 3)
