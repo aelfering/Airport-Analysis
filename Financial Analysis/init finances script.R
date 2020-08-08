@@ -28,14 +28,16 @@ current_cpi_int <- as.numeric(current_cpi)
 ####  Cleaning Operating Expenses ####
 
 # Airline filter
-CARRIER_NM <- 'AS'
+CARRIER_NM <- 'NK'
 YEAR_INT <- 2019
+QUARTERS <- c(1)
 PY_YEAR <- YEAR_INT-1
   
 # Overall Operating Expenses by Airline, Year, and Expense Group
 airline_op_exp <- operating_expenses %>%
   replace(is.na(.), 0) %>%
-  filter(CARRIER == CARRIER_NM) %>%
+  filter(CARRIER == CARRIER_NM,
+         QUARTER %in% QUARTERS) %>%
   group_by(CARRIER,
            YEAR) %>%
   summarise(SALARIES = sum(SALARIES),
@@ -85,6 +87,7 @@ columns_to_not_select <- c("AIRLINE_ID", "UNIQUE_CARRIER", "UNIQUE_CARRIER_NAME"
 
 py_op_expenses <- operating_expenses %>%
   filter(CARRIER == CARRIER_NM, 
+         QUARTER %in% QUARTERS,
          YEAR == PY_YEAR) %>%
   replace(is.na(.), 0) %>%
   select(-columns_to_not_select) %>%
@@ -124,6 +127,7 @@ py_op_expenses <- operating_expenses %>%
 
 metrics.sub.metrics <- operating_expenses %>%
   filter(CARRIER == CARRIER_NM, 
+         QUARTER %in% QUARTERS,
          YEAR == YEAR_INT) %>%
   replace(is.na(.), 0) %>%
   select(-columns_to_not_select) %>%
@@ -172,9 +176,6 @@ metrics.sub.metrics <- operating_expenses %>%
 metrics.sub.metrics$PCT.TOTAL[is.nan(metrics.sub.metrics$PCT.TOTAL)]<-0
 metrics.sub.metrics$YOY[is.nan(metrics.sub.metrics$YOY)]<- 0
 
-
-head(metrics.sub.metrics)
-
 knockout_column <- function(maxWidth = 70, class = NULL, ...) {
   colDef(
     cell = format_pct,
@@ -183,7 +184,7 @@ knockout_column <- function(maxWidth = 70, class = NULL, ...) {
     style = function(value) {
       # Lighter color for <1%
       if (value < 0.01) {
-        list(color = "#aaa")
+        list(color = "#111")
       } else {
         list(color = "#111", background = knockout_pct_color(value))
       }
@@ -219,16 +220,23 @@ reactable(# Themes
           # Column formatting
           groupBy = c("METRICS"), 
           columns = list(
-            METRICS = colDef(footer = "Total Operating Expenses"),
+            METRICS = colDef(footer = "Total Operating Expenses",
+                             maxWidth = 200),
+            SUB.METRICS = colDef(maxWidth = 200,
+                                 align = 'right'),
             AMOUNT = colDef(aggregate = "sum", 
+                            maxWidth = 200,
                             name = 'Operating Expenses',
-                            footer = function(values) paste('$', formatC(sum(values), format="f", big.mark = ",", digits=2), sep = ''),
-                            align = 'right',
+                            footer = function(values) paste('$', 
+                                                            formatC(sum(values), format="f", big.mark = ",", digits=2), 
+                                                            sep = ''),
+                            align = 'left',
                             format = colFormat(currency = "USD", 
                                                separators = TRUE, 
                                                digits = 2)),
             YOY =  colDef(
-              align = 'right',
+              align = 'left',
+              maxWidth = 90,
               format = colFormat(digits = 2,
                                  percent = TRUE),
               cell = function(value) {
@@ -241,21 +249,19 @@ reactable(# Themes
                   "#e00000"
                 }
                 list(fontWeight = 600, color = color)
-              }
-            ),
+              }),
             PCT.GRAND = knockout_column(name = "Percent of Total Expenses", 
-                                        align = 'right',
+                                        align = 'left',
                                         format = colFormat(digits = 2,
                                                            percent = TRUE),
                                         aggregate = 'sum',
-                                        maxWidth = 90),
+                                        maxWidth = 200),
             PCT.TOTAL = knockout_column(name = "Percent of Total Metric", 
-                                        align = 'right',
+                                        align = 'left',
                                         format = colFormat(digits = 2,
                                                            percent = TRUE),
                                         aggregate = 'sum',
-                                        maxWidth = 90)
-            ),
+                                        maxWidth = 170),
           rowStyle = JS("function(rowInfo) {
           if (rowInfo.level > 0) {
           return { borderLeft: '2px solid #000000' }
@@ -264,6 +270,7 @@ reactable(# Themes
           }
                         }")
           )
+)
 
 ####  Cleaning PnL  ####
 head(pnl_statements, 3)
