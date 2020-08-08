@@ -4,6 +4,7 @@ library(ggplot2)
 library(dplyr)
 library(tidylog)
 library(blscrapeR)
+library(reactable)
 
 remotes::install_github("d3treeR/d3treeR")
 
@@ -188,6 +189,25 @@ knockout_column <- function(maxWidth = 70, class = NULL, ...) {
     ...
   )
 }
+yoy_column <- function(maxWidth = 70, class = NULL, ...) {
+  colDef(
+    cell = yoy_format_pct,
+    maxWidth = maxWidth,
+    class = paste("cell number", class),
+    style = function(value) {
+      # Lighter color for <1%
+      if (value < 0.01) {
+        list(color = "#aaa")
+      } else {
+        list(color = "#111", background = yoy_change(value))
+      }
+    },
+    ...
+  )
+}
+yoy_format_pct <- function(value) {
+  formatC(paste0(round(value * 100), "%"), width = 4)
+}
 format_pct <- function(value) {
   if (value == 0) "  \u2013 "    # en dash for 0%
   #else if (value == 1) "\u2713"  # checkmark for 100%
@@ -203,6 +223,7 @@ make_color_pal <- function(colors, bias = 1) {
 off_rating_color <- make_color_pal(c("#ff2700", "#f8fcf8", "#44ab43"), bias = 1.3)
 def_rating_color <- make_color_pal(c("#ff2700", "#f8fcf8", "#44ab43"), bias = 0.6)
 knockout_pct_color <- make_color_pal(c("#ffffff", "#f2fbd2", "#c9ecb4", "#93d3ab", "#35b0ab"), bias = 2)
+yoy_change <- make_color_pal(c('#c40013', '#ef956e', '#fdfdfd', '#80abfc', '#004ff0'), bias = 2)
 
 reactable(# Themes
           metrics.sub.metrics, 
@@ -235,12 +256,11 @@ reactable(# Themes
                             format = colFormat(currency = "USD", 
                                                separators = TRUE, 
                                                digits = 2)),
-            YOY = colDef(name = "YOY",
-                         align = 'right',
-                         format = colFormat(digits = 2,
-                                            percent = TRUE),
-                         #aggregate = 'sum',
-                         maxWidth = 90),
+            YOY = yoy_column(name = "YOY",
+                             align = 'right',
+                             format = colFormat(digits = 2,
+                                                percent = TRUE),
+                             maxWidth = 90),
             PCT.GRAND = knockout_column(name = "Percent of Total Expenses", 
                                         align = 'right',
                                         format = colFormat(digits = 2,
