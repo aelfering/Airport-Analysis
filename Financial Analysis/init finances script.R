@@ -29,7 +29,7 @@ current_cpi_int <- as.numeric(current_cpi)
 
 # Airline filter
 CARRIER_NM <- 'UA'
-YEAR_INT <- 2005
+YEAR_INT <- 2020
 QUARTERS <- c(1)
 PY_YEAR <- YEAR_INT-1
   
