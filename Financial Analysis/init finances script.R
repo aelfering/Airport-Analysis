@@ -6,8 +6,6 @@ library(tidylog)
 library(blscrapeR)
 library(reactable)
 
-remotes::install_github("d3treeR/d3treeR")
-
 setwd("~/Documents/GitHub/Airport-Analysis/Financial Analysis")
 
 operating_expenses <- read.csv('Operating Expenses.csv')
@@ -28,9 +26,9 @@ current_cpi_int <- as.numeric(current_cpi)
 ####  Cleaning Operating Expenses ####
 
 # Airline filter
-CARRIER_NM <- 'UA'
-YEAR_INT <- 2020
-QUARTERS <- c(1)
+CARRIER_NM <- 'WN'
+YEAR_INT <- 2019
+QUARTERS <- c(1, 2, 3, 4)
 PY_YEAR <- YEAR_INT-1
   
 # Overall Operating Expenses by Airline, Year, and Expense Group
@@ -153,7 +151,7 @@ metrics.sub.metrics <- operating_expenses %>%
          METRICS = ifelse(SUB.METRICS == "OTHER", "Other", METRICS),
          METRICS = ifelse(SUB.METRICS == "TRANS_EXPENSE", "Trans Expense", METRICS)) %>%
   mutate(SUB.METRICS = gsub('\\_', ' ', SUB.METRICS)) %>%
-  group_by(METRICS) %>%
+  group_by(CARRIER, METRICS) %>%
   mutate(TOTAL = sum(SUB.AMOUNT)) %>%
   ungroup() %>%
   mutate(PCT.TOTAL = SUB.AMOUNT/TOTAL,
@@ -166,6 +164,7 @@ metrics.sub.metrics <- operating_expenses %>%
          PCT.TOTAL) %>%
   full_join(py_op_expenses, by = c('METRICS' = 'METRICS', 'SUB.METRICS' = 'SUB.METRICS')) %>%
   mutate(YOY = (AMOUNT-PY_AMOUNT)/PY_AMOUNT) %>%
+  filter(!is.nan(YOY)) %>%
   select(METRICS,
          SUB.METRICS,
          AMOUNT,
@@ -173,9 +172,6 @@ metrics.sub.metrics <- operating_expenses %>%
          YOY,
          PCT.TOTAL,
          PCT.GRAND)
-
-metrics.sub.metrics$PCT.TOTAL[is.nan(metrics.sub.metrics$PCT.TOTAL)]<-0
-metrics.sub.metrics$YOY[is.nan(metrics.sub.metrics$YOY)]<- 0
 
 knockout_column <- function(maxWidth = 70, class = NULL, ...) {
   colDef(
@@ -204,6 +200,13 @@ make_color_pal <- function(colors, bias = 1) {
   get_color <- colorRamp(colors, bias = bias)
   function(x) rgb(get_color(x), maxColorValue = 255)
 }
+yoy_pct <- function(value){
+    if (value > 0)                            paste0("+", round(value, 4)*100, '%') 
+    else if (value <= 0)                      paste0(round(value, 4)*100, '%')
+    else if (is.null(value))                   '-'
+}
+
+yoy_pct(NA)
 
 knockout_pct_color <- make_color_pal(c("#ffffff", "#f2fbd2", "#c9ecb4", "#93d3ab", "#35b0ab"), bias = 2)
 
@@ -258,9 +261,7 @@ reactable(# Themes
                              }"),
               format = colFormat(digits = 2,
                                  percent = TRUE),
-              cell = function(value) {
-                if (value > 0) paste0("+", round(value, 4)*100, '%') else paste0(round(value, 4)*100, '%')
-                },
+              cell = yoy_pct,
               style = function(value) {
                 color <- if (value > 0) {
                   "#008000"

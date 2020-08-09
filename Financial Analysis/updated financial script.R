@@ -307,10 +307,14 @@ reactable(# Themes
                     return (amount-py_amount) / py_amount
                     }       
                              }"),
-    #footer = ,
     format = colFormat(digits = 2,
                          percent = TRUE),
-    cell = yoy_pct,
+    cell = JS("
+    function(cellInfo) {
+      // Render as ✘ or ✓ 
+      return cellInfo.value === '-'
+    }
+  "),
     style = function(value) {
         color <- if (value > 0) {
           "#008000"
