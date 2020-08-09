@@ -34,9 +34,9 @@ setwd("~/Documents/GitHub/Airport-Analysis/Financial Analysis")
 operating_expenses <- read.csv('Operating Expenses.csv')
 
 ####  Variables for Testing ####
-CARRIER_NM <- 'G4'
-YEAR_INT <- 2014
-QUARTERS <- c(1)
+CARRIER_NM <- 'AA'
+YEAR_INT <- 2004
+QUARTERS <- c(1, 2, 3, 4)
 PY_YEAR <- YEAR_INT-1
 
 ####  Data Cleaning ####
@@ -299,6 +299,10 @@ reactable(# Themes
               
                     if (((amount-py_amount) / py_amount) == Number.POSITIVE_INFINITY){
                     return '-'
+                    } else if (amount < 0) {
+                    return '-'
+                    } else if (py_amount < 0) {
+                    
                     } else {
                     return (amount-py_amount) / py_amount
                     }       
@@ -312,7 +316,8 @@ reactable(# Themes
           "#008000"
         } else if (value < 0) {
           "#e00000"
-        }
+        } else if (value == 0)
+        {}  
         list(fontWeight = 600, color = color)
       }
     ),
