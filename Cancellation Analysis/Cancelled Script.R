@@ -52,9 +52,7 @@ all_stats <- on_time_df %>%
          ROLLING_OP_FLIGHTS,
          ROLLING_DELAYS,
          ROLLING_CANCELLED,
-         ROLLING_DEL_PCT,
          ROLLING_PCT_DELAYED,
-         ROLLING_CAN_PCT,
          ROLLING_PCT_CANCELLED)
 
 min_fl_date <- as.Date(min(on_time_df$FL_DATE))
