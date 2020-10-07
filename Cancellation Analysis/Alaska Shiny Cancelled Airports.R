@@ -1,3 +1,5 @@
+setwd("~/Documents/GitHub/Airport-Analysis/Cancellation Analysis/2018 On Time Data")
+
 library(ggplot2)  
 library(shiny)
 library(htmltools)
