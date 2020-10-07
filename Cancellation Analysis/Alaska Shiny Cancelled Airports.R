@@ -9,7 +9,7 @@ library(data.table)
 library(zoo)
 library(ggrepel)
 
-on_time <- list.files("/Users/alexelfering/Desktop/2018 On Time Data", pattern = "*.csv", full.names = TRUE)
+on_time <- list.files("~/Documents/GitHub/Airport-Analysis/Cancellation Analysis/2018 On Time Data", pattern = "*.csv", full.names = TRUE)
 on_time_df <- rbindlist(lapply(on_time, fread))
 
 ### Stats Overall ####

@@ -1,0 +1,13 @@
+name: CancellationAnalysis
+title: CancellationAnalysis
+username:
+account: aelfering
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 2965494
+bundleId: 3713942
+url: https://aelfering.shinyapps.io/CancellationAnalysis/
+when: 1602096464.69586
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: Cancelled Script.R
