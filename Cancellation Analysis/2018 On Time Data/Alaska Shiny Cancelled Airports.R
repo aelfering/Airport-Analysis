@@ -1,8 +1,5 @@
 library(ggplot2)  
-library(shiny)
-library(htmltools)
-library(shinydashboard)
-library(shinythemes) 
+library(shiny)  
 library(dplyr) 
 library(lubridate)
 library(tidyr)
@@ -15,6 +12,7 @@ library(ggrepel)
 on_time <- list.files("~/Documents/GitHub/Airport-Analysis/Cancellation Analysis/2018 On Time Data", pattern = "*.csv", full.names = TRUE)
 on_time_df <- rbindlist(lapply(on_time, fread))
 
+### Stats Overall ####
 top_airports <- on_time_df %>%
   replace(is.na(.), 0) %>%
   filter(ORIGIN_STATE_NM == 'Alaska',
