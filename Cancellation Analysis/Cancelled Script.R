@@ -28,7 +28,7 @@ sum_market <- market_t100 %>%
 on_time <- list.files("/Users/alexelfering/Desktop/On Time Data", pattern = "*.csv", full.names = TRUE)
 on_time_df <- rbindlist(lapply(on_time, fread))
 
-rolling_sum_int <- 7
+rolling_sum_int <- 3
 
 ### Stats Overall ####
 all_stats <- on_time_df %>%
@@ -95,7 +95,6 @@ on_time_df %>%
        x = '',
        y = '',
        color = 'Legend: ') +
-  geom_vline(xintercept = as.Date('2020-03-12')) +
   geom_line(size = 1) +
   theme(plot.title = element_text(face = 'bold', size = 18, family = 'Arial'),
         legend.position = 'top',
@@ -149,7 +148,7 @@ ggplot(all_stats,
                           y = ROLLING_CANCELLED),
             size = 1,
             color = '#59E60B') +
-  labs(title = 'Cancellations are down, but so are Flights',
+  labs(title = 'Total Operated Flights and Cancellations',
        subtitle = paste('Based on a rolling ', rolling_sum_int, ' day sum', sep = ''),
        x = '',
        y = '') +
