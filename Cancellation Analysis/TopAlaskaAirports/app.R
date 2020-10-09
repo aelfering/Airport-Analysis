@@ -16,7 +16,7 @@ library(rsconnect)
 ak_flights <- read.csv('top_alaska_airport_flights.csv')
 
 ui <- shinyUI(fluidPage(  
-    titlePanel("Percent of Domestic Flights Cancelled Among Major Alaska Airports"),  
+    titlePanel("Percent of Domestic Flights Canceled Among Major Alaska Airports"),  
     sidebarLayout(  
         sidebarPanel(
             selectInput("airport", "Select an Airport:",
@@ -86,7 +86,7 @@ server <- shinyServer(function(input, output) {
         direction <- ifelse(can_rate > py_can_rate, 'up',
                             ifelse(can_rate < py_can_rate, 'down', 'same'))
         
-        title_text <- paste(airport_name, ' Airport: ', can_rate, ' of Domestic Flights were Cancelled Between ', format(strptime(begin_day, format = "%Y-%m-%d"), "%b-%d"), ' and ', format(strptime(selection_date, format = "%Y-%m-%d"), "%b-%d"), sep = '')
+        title_text <- paste(airport_name, ' Airport: ', can_rate, ' of Domestic Flights were Canceled Between ', format(strptime(begin_day, format = "%Y-%m-%d"), "%b-%d"), ' and ', format(strptime(selection_date, format = "%Y-%m-%d"), "%b-%d"), sep = '')
         
         subtitle_text <- paste('This is ', direction, ' from ', py_can_rate, ' during the same time period last year. ', '\nBased on a ', input$range, ' day rolling sum of Operated Flights and Cancelled Flights.\n', sep = '')
         
