@@ -1,0 +1,12 @@
+name: TopAlaskaAirports
+title: TopAlaskaAirports
+username:
+account: aelfering
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 2976358
+bundleId: 3720362
+url: https://aelfering.shinyapps.io/TopAlaskaAirports/
+when: 1602239333.88974
+asMultiple: FALSE
+asStatic: FALSE
