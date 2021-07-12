@@ -2,6 +2,7 @@ library(glue)
 library(tidyverse)
 library(lubridate)
 library(tabulizer)
+library(zoo)
 
 # establish variables
 years <- 2003:2021
