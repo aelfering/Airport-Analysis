@@ -7,16 +7,25 @@
 # load the libraries
 library(tidyverse)
 library(ggplot2)
+library(lubridate)
+library(glue)
 
 # load the data
 SFOPax <- read.csv('SFO Passengers.csv')
 
+# data cleaning
+head(SFOPax)
+
+SFOPaxClean <- SFOPax %>%
+  mutate(Year =(substr(Activity.Period, 1, 4)),
+         Month = (substr(Activity.Period, 5, 6)),
+         Date = ymd(paste(Year, Month, 1, sep = '-') )) %>%
+  select(-Activity.Period,
+         -Month)
+  
+
 # find year-over-year passenger change by geo region
-SFOYOYRegion <- SFOPax %>%
-  select(Activity.Period,
-         GEO.Region,
-         Passenger.Count) %>%
-  mutate(Year = substr(Activity.Period, 1, 4)) %>%
+SFOYOYRegion <- SFOPaxClean %>%
   group_by(Year,
            GEO.Region) %>%
   summarise(Pax = sum(Passenger.Count)) %>%
@@ -38,7 +47,7 @@ SFOYearPax <- SFOYOYRegion %>%
   mutate(YOY = Diff/PY)
 
 # variables for testing
-YearFilter <- 2016
+YearFilter <- 2012
 YearFilterPY <- YearFilter-1
 
 # return pax traffic numbers from YearFilter
@@ -70,19 +79,18 @@ WaterfallDF <- bind_rows(PYPaxDF,
          End = RollingPax,
          Beg = PY)
 
-CYTotal <- WaterfallDF %>%
-  filter(GEO.Region == YearFilter) %>%
-  select(End) %>%
+# set upper and lower limits of the graph
+LowerLimit <- WaterfallDF %>%
+  summarise(End = min(End)) %>%
+  as.numeric()
+  
+UpperLimit <- WaterfallDF %>%
+  summarise(End = max(End)) %>%
   as.numeric()
 
-PYTotal <- WaterfallDF %>%
-  filter(GEO.Region == YearFilterPY) %>%
-  select(End) %>%
-  as.numeric()
-
+# the visualization
 WaterfallDF %>%
   ggplot() + 
-  #coord_flip() +
   geom_segment(mapping = aes(x = reorder(GEO.Region, Rows),
                              xend = GEO.Region,
                              y = Beg,
@@ -101,8 +109,8 @@ WaterfallDF %>%
                                 'FALSE' = 'Decreased')) +
   scale_y_continuous(labels = scales::comma) +
   scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) +
-  coord_cartesian(ylim = c(min(c(PYTotal, CYTotal)) * 0.99,
-                           max(c(WaterfallDF$Beg)) )) +
+  coord_cartesian(ylim = c(LowerLimit * 0.99,
+                           UpperLimit * 1.001 )) +
   labs(x = '',
        y = '',
        caption = 'Visualization by Alex Elfering\nSource: San Francisco International Airport',
