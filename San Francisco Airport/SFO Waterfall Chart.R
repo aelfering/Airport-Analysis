@@ -63,31 +63,36 @@ WaterfallDF <- bind_rows(PYPaxDF,
   mutate(Rows = row_number()) %>%
   mutate(PY = case_when(Rows == min(Rows) | Rows == max(Rows) ~ 0,
                         TRUE ~ lag(RollingPax)),
-         RollingPax = ifelse(is.na(RollingPax), Pax, RollingPax))
+         RollingPax = ifelse(is.na(RollingPax), Pax, RollingPax)) %>%
+  select(GEO.Region,
+         Rows,
+         Balance = Pax,
+         End = RollingPax,
+         Beg = PY)
 
-CYTotal <- Mark1 %>%
+CYTotal <- WaterfallDF %>%
   filter(GEO.Region == YearFilter) %>%
-  select(RollingPax) %>%
+  select(End) %>%
   as.numeric()
 
-PYTotal <- Mark1 %>%
+PYTotal <- WaterfallDF %>%
   filter(GEO.Region == YearFilterPY) %>%
-  select(RollingPax) %>%
+  select(End) %>%
   as.numeric()
 
-Mark1 %>%
+WaterfallDF %>%
   ggplot() + 
   #coord_flip() +
   geom_segment(mapping = aes(x = reorder(GEO.Region, Rows),
                              xend = GEO.Region,
-                             y = PY,
-                             yend = RollingPax,
-                             color = Pax > 0),
+                             y = Beg,
+                             yend = End,
+                             color = Balance > 0),
                size = 10) +
-  geom_text(subset(Mark1, !GEO.Region %in% c('PY', 'CY')),
+  geom_text(subset(WaterfallDF, !GEO.Region %in% c(as.character(YearFilter), as.character(YearFilterPY))),
             mapping = aes(x =  GEO.Region,
-                          y = ifelse(PY > RollingPax, PY, RollingPax),
-                          label = paste0(ifelse(Pax > 0, '+', ''), scales::comma(Pax) )),
+                          y = ifelse(End > Beg, End, Beg),
+                          label = paste0(ifelse(Balance > 0, '+', ''), scales::comma(Balance) )),
             vjust= -0.5,
             family = 'Arial') +
   scale_color_manual(values = c('TRUE' = 'steelblue',
@@ -97,7 +102,7 @@ Mark1 %>%
   scale_y_continuous(labels = scales::comma) +
   scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) +
   coord_cartesian(ylim = c(min(c(PYTotal, CYTotal)) * 0.99,
-                           max(c(Mark1$RollingPax)) )) +
+                           max(c(WaterfallDF$Beg)) )) +
   labs(x = '',
        y = '',
        caption = 'Visualization by Alex Elfering\nSource: San Francisco International Airport',
