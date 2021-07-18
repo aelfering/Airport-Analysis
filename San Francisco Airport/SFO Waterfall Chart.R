@@ -30,45 +30,48 @@ SFOYOYRegion <- SFOPax %>%
   filter(Year > 2006,
          GEO.Region != 'US')
 
-YearFilter <- 2016
-YearFilterPY <- YearFilter-1
-
+# find overall year-over-year change
 SFOYearPax <- SFOYOYRegion %>%
   group_by(Year) %>%
   summarise_if(is.numeric, sum, na.rm = TRUE) %>%
   ungroup() %>%
   mutate(YOY = Diff/PY)
 
+# variables for testing
+YearFilter <- 2016
+YearFilterPY <- YearFilter-1
+
+# return pax traffic numbers from YearFilter
 SFOYearPaxFilter <- dplyr::filter(SFOYearPax, Year == YearFilter)
 
-PYPaxDF <- tibble(GEO.Region = 'PY',
+PYPaxDF <- tibble(GEO.Region = as.character(YearFilterPY),
                   Pax = as.numeric(SFOYearPaxFilter[,3]))
 
-CYPaxDF <- tibble(GEO.Region = 'CY',
+CYPaxDF <- tibble(GEO.Region = as.character(YearFilter),
                   Pax = as.numeric(SFOYearPaxFilter[,2]))
 
-RegionSelect <- SFOYOYRegion %>%
+YearRegionSelect <- SFOYOYRegion %>%
   filter(Year == YearFilter) %>%
   select(GEO.Region,
          Pax = Diff)
 
-Mark1 <- bind_rows(PYPaxDF,
-                   RegionSelect) %>%
+# create the waterfall DF
+WaterfallDF <- bind_rows(PYPaxDF,
+                   YearRegionSelect) %>%
   mutate(RollingPax = cumsum(Pax)) %>%
   bind_rows(CYPaxDF) %>%
   mutate(Rows = row_number()) %>%
-  mutate(Row = row_number(),
-         PY = case_when(Rows == min(Rows) | Rows == max(Rows) ~ 0,
+  mutate(PY = case_when(Rows == min(Rows) | Rows == max(Rows) ~ 0,
                         TRUE ~ lag(RollingPax)),
          RollingPax = ifelse(is.na(RollingPax), Pax, RollingPax))
 
 CYTotal <- Mark1 %>%
-  filter(GEO.Region == 'CY') %>%
+  filter(GEO.Region == YearFilter) %>%
   select(RollingPax) %>%
   as.numeric()
 
 PYTotal <- Mark1 %>%
-  filter(GEO.Region == 'PY') %>%
+  filter(GEO.Region == YearFilterPY) %>%
   select(RollingPax) %>%
   as.numeric()
 
