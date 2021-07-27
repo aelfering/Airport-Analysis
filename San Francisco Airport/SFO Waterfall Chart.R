@@ -25,7 +25,7 @@ SFOPaxClean <- SFOPax %>%
          Date = ymd(paste(Year, Month, 1, sep = '-') )) %>%
   select(-Activity.Period,
          -Month)
-  
+
 # find year-over-year passenger change by geo region  ----
 SFOYOYRegion <- SFOPaxClean %>%
   group_by(Year,
@@ -39,7 +39,7 @@ SFOYOYRegion <- SFOPaxClean %>%
          YOY = Diff/PY) %>%
   ungroup() %>%
   filter(Year > 2006,
-         GEO.Region != 'US',
+         GEO.Summary == 'International',
          !is.na(PY))
 
 # find overall year-over-year change  ----
@@ -50,93 +50,8 @@ SFOYearPax <- SFOYOYRegion %>%
   mutate(YOY = Diff/PY)
 
 # variables for testing  ----
-YearFilter <- 2020
+YearFilter <- 2008
 YearFilterPY <- YearFilter-1
-
-# additional charts for context  ----
-YearlyAnnualPax <- SFOYearPax %>%
-  filter(Year %in% c(YearFilter, YearFilterPY))
-
-BarInit <- ggplot() + 
-  geom_bar(YearlyAnnualPax,
-           mapping = aes(x = Year,
-                         y = Pax,
-                         fill = Year),
-           width = 0.5,
-           stat = 'identity',
-           position = 'identity') +
-  scale_fill_manual(values = c('#bdbdbd',
-                               '#636363')) +
-  geom_hline(yintercept = 0) +
-  scale_y_continuous(labels = scales::comma,
-                     expand = expansion(mult = c(0, .05))) +
-  labs(x = '',
-       y = '',
-       #color = 'Passenger Traffic:',
-       #title = paste('San Francisco International Airport YOY International Passenger Traffic by Region'),
-       title = 'Annual Passenger Traffic') +
-  theme(plot.title = element_text(face = 'bold', size = 14, family = 'Franklin Gothic Book'),
-        plot.subtitle = element_text(face = 'bold', size = 12, family = 'Franklin Gothic Book'),
-        legend.position = 'none',
-        legend.background=element_blank(),
-        legend.text = element_text(size = 12, family = 'Franklin Gothic Book'),
-        legend.title = element_text(size = 12, family = 'Franklin Gothic Book'),
-        legend.key=element_blank(),
-        plot.title.position = "plot",
-        plot.caption.position =  "plot",
-        plot.caption = element_text(size = 12, family = 'Franklin Gothic Book'),
-        axis.title = element_text(size = 12, family = 'Franklin Gothic Book'),
-        axis.text = element_text(size = 12, family = 'Franklin Gothic Book', color = '#969696'),
-        axis.text.x.bottom = element_text(size = 12, family = 'Franklin Gothic Book', color = 'black'),
-        axis.line.y = element_blank(),
-        axis.ticks.y = element_blank(),
-        strip.text = ggplot2::element_text(size = 12, hjust = 0, face = 'bold', color = 'black', family = 'Franklin Gothic Book'),
-        strip.background = element_rect(fill = NA),
-        panel.background = ggplot2::element_blank(),
-        axis.line = element_line(colour = "#222222", linetype = "solid"),
-        panel.grid.major.y = element_line(colour = "#c1c1c1", linetype = "dashed"),
-        panel.grid.major.x = element_blank()) 
-
-YearRegionPax <- SFOYOYRegion %>%
-  filter(Year %in% c(YearFilter,
-                     YearFilterPY))
-
-GroupedInit <- ggplot(YearRegionPax, 
-                      aes(factor(GEO.Region), 
-                          Pax, 
-                          fill = Year),
-                      width = 0.5) + 
-  geom_bar(stat="identity", 
-           position = "dodge") + 
-  scale_fill_manual(values = c('#bdbdbd',
-                               '#636363')) +
-  scale_y_continuous(labels = scales::comma,
-                     expand = expansion(mult = c(0, .05))) +
-  scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) +
-  labs(title = 'Pax Traffic by Region',
-       x = '',
-       y = '') +
-  theme(plot.title = element_text(face = 'bold', size = 14, family = 'Franklin Gothic Book'),
-        plot.subtitle = element_text(face = 'bold', size = 12, family = 'Franklin Gothic Book'),
-        legend.position = 'none',
-        legend.background=element_blank(),
-        legend.text = element_text(size = 12, family = 'Franklin Gothic Book'),
-        legend.title = element_text(size = 12, family = 'Franklin Gothic Book'),
-        legend.key=element_blank(),
-        plot.title.position = "plot",
-        plot.caption.position =  "plot",
-        plot.caption = element_text(size = 12, family = 'Franklin Gothic Book'),
-        axis.title = element_text(size = 12, family = 'Franklin Gothic Book'),
-        axis.text = element_text(size = 12, family = 'Franklin Gothic Book', color = '#969696'),
-        axis.text.x.bottom = element_text(size = 12, family = 'Franklin Gothic Book', color = 'black'),
-        axis.line.y = element_blank(),
-        axis.ticks.y = element_blank(),
-        strip.text = ggplot2::element_text(size = 12, hjust = 0, face = 'bold', color = 'black', family = 'Franklin Gothic Book'),
-        strip.background = element_rect(fill = NA),
-        panel.background = ggplot2::element_blank(),
-        axis.line = element_line(colour = "#222222", linetype = "solid"),
-        panel.grid.major.y = element_line(colour = "#c1c1c1", linetype = "dashed"),
-        panel.grid.major.x = element_blank()) 
 
 # return pax traffic numbers from YearFilter  ----
 SFOYearPaxFilter <- dplyr::filter(SFOYearPax, Year == YearFilter)
@@ -147,6 +62,11 @@ PYPaxDF <- tibble(GEO.Region = as.character(YearFilterPY),
 CYPaxDF <- tibble(GEO.Region = as.character(YearFilter),
                   Pax = as.numeric(SFOYearPaxFilter[,2]))
 
+NetResult <- tibble(GEO.Region = 'Net Gain/Loss',
+                    End = as.numeric(SFOYearPaxFilter[,3]),
+                    Beg = as.numeric(SFOYearPaxFilter[,2]),
+                    Balance = Beg-End)
+
 YearRegionSelect <- SFOYOYRegion %>%
   filter(Year == YearFilter) %>%
   select(GEO.Region,
@@ -155,24 +75,26 @@ YearRegionSelect <- SFOYOYRegion %>%
 
 # create the waterfall DF  ----
 WaterfallDF <- bind_rows(PYPaxDF,
-                   YearRegionSelect) %>%
+                         YearRegionSelect) %>%
   mutate(RollingPax = cumsum(Pax)) %>%
   bind_rows(CYPaxDF) %>%
-  mutate(Rows = row_number()) %>%
-  mutate(PY = case_when(Rows == min(Rows) | Rows == max(Rows) ~ 0,
+  #mutate(Rows = row_number()) %>%
+  mutate(PY = case_when(GEO.Region %in% c(YearFilter, YearFilterPY) ~ 0,
                         TRUE ~ lag(RollingPax)),
          RollingPax = ifelse(is.na(RollingPax), Pax, RollingPax)) %>%
   select(GEO.Region,
-         Rows,
+         #Rows,
          Balance = Pax,
          End = RollingPax,
-         Beg = PY)
+         Beg = PY) %>%
+  bind_rows(NetResult) %>%
+  mutate(Rows = row_number())
 
 # set upper and lower limits of the graph
 LowerLimit <- WaterfallDF %>%
   summarise(End = min(End, na.rm = TRUE)) %>%
   as.numeric()
-  
+
 UpperLimit <- WaterfallDF %>%
   summarise(End = max(End, na.rm = TRUE)) %>%
   as.numeric()
@@ -185,6 +107,7 @@ SFOWaterfallChart <- WaterfallDF %>%
                              y = Beg,
                              yend = End,
                              color = Balance > 0),
+               shape =1,
                size = 10) +
   geom_segment(subset(WaterfallDF, GEO.Region %in% c(as.character(YearFilter), as.character(YearFilterPY))),
                mapping = aes(x = reorder(GEO.Region, Rows),
@@ -193,13 +116,13 @@ SFOWaterfallChart <- WaterfallDF %>%
                              yend = End),
                color = '#cccccc',
                size = 10) +
-  geom_segment(subset(WaterfallDF, !GEO.Region %in% c(as.character(YearFilter), as.character(YearFilterPY))), 
-               mapping = aes(x = seq(1.7, nrow(WaterfallDF)-1.3, 1), 
+  geom_segment(subset(WaterfallDF, !GEO.Region %in% c(as.character(YearFilter), as.character(YearFilterPY), 'Net Gain/Loss')), 
+               mapping = aes(x = seq(1.7, nrow(WaterfallDF)-2.3, 1), 
                              y = Beg, 
-                             xend = seq(1.7, nrow(WaterfallDF)-1.3, 1), 
+                             xend = seq(1.7, nrow(WaterfallDF)-2.3, 1), 
                              yend = End),
                arrow = arrow(type = "open",
-                             length = unit(0.02, "npc")),
+                             length = unit(0.01, "npc")),
                size = 0.5) +
   geom_text(subset(WaterfallDF, !GEO.Region %in% c(as.character(YearFilter), as.character(YearFilterPY))),
             mapping = aes(x =  GEO.Region,
@@ -219,9 +142,9 @@ SFOWaterfallChart <- WaterfallDF %>%
   labs(x = '',
        y = '',
        color = 'Passenger Traffic:',
-       #title = paste('San Francisco International Airport YOY International Passenger Traffic by Region'),
-       title = paste('Change in international passenger traffic ', YearFilter, ' vs ', YearFilterPY, sep = '')) +
-  theme(plot.title = element_text(face = 'bold', size = 14, family = 'Franklin Gothic Book'),
+       caption = 'Visualization by RussellTheDataVizzer\nSource: DataSF',
+       title = paste('Change in International Passenger Traffic at San Francisco International Airport: ', YearFilter, ' vs ', YearFilterPY, sep = '')) +
+  theme(plot.title = element_text(face = 'bold', size = 16, family = 'Franklin Gothic Book'),
         plot.subtitle = element_text(face = 'bold', size = 12, family = 'Franklin Gothic Book'),
         legend.position = 'none',
         legend.background=element_blank(),
@@ -230,7 +153,7 @@ SFOWaterfallChart <- WaterfallDF %>%
         legend.key=element_blank(),
         plot.title.position = "plot",
         plot.caption.position =  "plot",
-        plot.caption = element_text(size = 12, family = 'Franklin Gothic Book'),
+        plot.caption = element_text(size = 12, family = 'Franklin Gothic Book', color = 'gray'),
         axis.title = element_text(size = 12, family = 'Franklin Gothic Book'),
         axis.text = element_text(size = 12, family = 'Franklin Gothic Book', color = '#969696'),
         axis.text.x.bottom = element_text(size = 12, family = 'Franklin Gothic Book', color = 'black'),
@@ -240,32 +163,16 @@ SFOWaterfallChart <- WaterfallDF %>%
         strip.background = element_rect(fill = NA),
         panel.background = ggplot2::element_blank(),
         axis.line = element_line(colour = "#222222", linetype = "solid"),
-        panel.grid.major.y = element_line(colour = "#c1c1c1", linetype = "dashed"),
+        panel.grid.major.y = element_line(colour = "#f0f0f0", linetype = "dashed"),
         panel.grid.major.x = element_blank()) 
 
+SFOWaterfallChart
+
+ggsave(SFOWaterfallChart,
+       file = 'SFO Waterfall.png',
+       width = 10,
+       height = 5,
+       units = 'in')
+
 # put the final visualizations together  ----
-Group1 <- ggarrange(BarInit,
-                    GroupedInit,
-                    widths = c(0.7, 2))
-
-Group2 <- ggarrange(Group1,
-                    SFOWaterfallChart,
-                    nrow = 2,
-                    heights = c(0.7, 1))
-
-FinalVisualization <- annotate_figure(Group2, 
-                                      top = text_grob(paste("International Passenger Traffic at\nSan Francisco International Airport ", YearFilter, '-', YearFilterPY, sep = ''), 
-                                                      color = "black", 
-                                                      family = 'Franklin Gothic Book',
-                                                      face = "bold", 
-                                                      size = 22),
-                                      bottom = text_grob("Visualization by Alex Elfering\nSource: DataSF", 
-                                                         color = "gray", 
-                                                         family = 'Franklin Gothic Book',
-                                                         #face = "bold", 
-                                                         size = 10))
-
-ggsave(FinalVisualization, file = 'FinalVisualization.png', width = 10, height = 10, units = 'in')
-FinalVisualization
-
 
