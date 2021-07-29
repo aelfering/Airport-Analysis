@@ -7,7 +7,6 @@
 # load the libraries  ----
 library(tidyverse)
 library(tidylog)
-library(ggpubr)
 library(ggplot2)
 library(lubridate)
 library(glue)
@@ -24,7 +23,8 @@ SFOPaxClean <- SFOPax %>%
          Month = (substr(Activity.Period, 5, 6)),
          Date = ymd(paste(Year, Month, 1, sep = '-') )) %>%
   select(-Activity.Period,
-         -Month)
+         -Month) %>%
+  filter(GEO.Summary == 'International')
 
 # find year-over-year passenger change by geo region  ----
 SFOYOYRegion <- SFOPaxClean %>%
@@ -35,12 +35,9 @@ SFOYOYRegion <- SFOPaxClean %>%
   filter(Year > 2005) %>%
   group_by(GEO.Region) %>%
   mutate(PY = lag(Pax),
-         Diff = Pax-PY,
-         YOY = Diff/PY) %>%
+         Diff = Pax-PY) %>%
   ungroup() %>%
-  filter(Year > 2006,
-         GEO.Summary == 'International',
-         !is.na(PY))
+  filter(!is.na(PY))
 
 # find overall year-over-year change  ----
 SFOYearPax <- SFOYOYRegion %>%
@@ -50,7 +47,7 @@ SFOYearPax <- SFOYOYRegion %>%
   mutate(YOY = Diff/PY)
 
 # variables for testing  ----
-YearFilter <- 2008
+YearFilter <- 2010
 YearFilterPY <- YearFilter-1
 
 # return pax traffic numbers from YearFilter  ----
@@ -63,9 +60,9 @@ CYPaxDF <- tibble(GEO.Region = as.character(YearFilter),
                   Pax = as.numeric(SFOYearPaxFilter[,2]))
 
 NetResult <- tibble(GEO.Region = 'Net Gain/Loss',
-                    End = as.numeric(SFOYearPaxFilter[,3]),
-                    Beg = as.numeric(SFOYearPaxFilter[,2]),
-                    Balance = Beg-End)
+                    End = as.numeric(SFOYearPaxFilter[,2]),
+                    Beg = as.numeric(SFOYearPaxFilter[,3]),
+                    Balance = End-Beg)
 
 YearRegionSelect <- SFOYOYRegion %>%
   filter(Year == YearFilter) %>%
@@ -107,7 +104,6 @@ SFOWaterfallChart <- WaterfallDF %>%
                              y = Beg,
                              yend = End,
                              color = Balance > 0),
-               shape =1,
                size = 10) +
   geom_segment(subset(WaterfallDF, GEO.Region %in% c(as.character(YearFilter), as.character(YearFilterPY))),
                mapping = aes(x = reorder(GEO.Region, Rows),
@@ -116,13 +112,13 @@ SFOWaterfallChart <- WaterfallDF %>%
                              yend = End),
                color = '#cccccc',
                size = 10) +
-  geom_segment(subset(WaterfallDF, !GEO.Region %in% c(as.character(YearFilter), as.character(YearFilterPY), 'Net Gain/Loss')), 
-               mapping = aes(x = seq(1.7, nrow(WaterfallDF)-2.3, 1), 
+  geom_segment(subset(WaterfallDF, !GEO.Region %in% c(as.character(YearFilter), as.character(YearFilterPY))), 
+               mapping = aes(x = c(seq(1.7, nrow(WaterfallDF)-2.3, 1), nrow(WaterfallDF)-0.3), 
                              y = Beg, 
-                             xend = seq(1.7, nrow(WaterfallDF)-2.3, 1), 
+                             xend = c(seq(1.7, nrow(WaterfallDF)-2.3, 1), nrow(WaterfallDF)-0.3), 
                              yend = End),
                arrow = arrow(type = "open",
-                             length = unit(0.01, "npc")),
+                             length = unit(0.015, "npc")),
                size = 0.5) +
   geom_text(subset(WaterfallDF, !GEO.Region %in% c(as.character(YearFilter), as.character(YearFilterPY))),
             mapping = aes(x =  GEO.Region,
@@ -142,7 +138,7 @@ SFOWaterfallChart <- WaterfallDF %>%
   labs(x = '',
        y = '',
        color = 'Passenger Traffic:',
-       caption = 'Visualization by RussellTheDataVizzer\nSource: DataSF',
+       caption = 'Visualization by Alex Elfering\nSource: DataSF',
        title = paste('Change in International Passenger Traffic at San Francisco International Airport: ', YearFilter, ' vs ', YearFilterPY, sep = '')) +
   theme(plot.title = element_text(face = 'bold', size = 16, family = 'Franklin Gothic Book'),
         plot.subtitle = element_text(face = 'bold', size = 12, family = 'Franklin Gothic Book'),
