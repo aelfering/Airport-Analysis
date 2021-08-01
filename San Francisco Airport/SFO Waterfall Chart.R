@@ -8,7 +8,6 @@
 library(tidyverse)  # for data cleaning and creating new columns 
 library(tidylog)    # this will summarise all of the changes that we make to data frames
 library(ggplot2)    # for building the viz
-library(glue)       # for embedding variables into strings - will be used below
 library(extrafont)  # customizing the ultimate visualization
 
 # load the data  ----
@@ -46,7 +45,7 @@ SFOYearPax <- SFOYOYRegion %>%
   ungroup()
 
 # variables for testing  ----
-YearFilter <- 2018
+YearFilter <- 2019
 YearFilterPY <- YearFilter-1
 
 # return pax traffic numbers from YearFilter  ----
