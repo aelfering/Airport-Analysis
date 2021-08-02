@@ -165,6 +165,6 @@ SFOWaterfallChart
 
 ggsave(SFOWaterfallChart,
        file = 'SFO Waterfall.png',
-       width = 20,
-       height = 10,
+       width = 10,
+       height = 5,
        units = 'in')
