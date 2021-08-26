@@ -23,6 +23,8 @@ SFOPaxClean <- SFOPax %>%
          -Month) %>%
   filter(GEO.Summary == 'International')
 
+head(SFOPaxClean, 10)
+
 # find year-over-year passenger change by geo region  ----
 SFOYOYRegion <- SFOPaxClean %>%
   group_by(Year,
@@ -138,7 +140,7 @@ SFOWaterfallChart <- WaterfallDF %>%
        y = '',
        color = 'Passenger Traffic:',
        caption = 'Visualization by Alex Elfering\nSource: DataSF',
-       title = paste('Change in International Passenger Traffic at San Francisco International Airport: ', YearFilter, ' vs ', YearFilterPY, sep = '')) +
+       title = paste('Change in International Passenger Traffic at San Francisco International\nAirport: ', YearFilter, ' vs ', YearFilterPY, sep = '')) +
   theme(plot.title = element_text(face = 'bold', size = 22, family = 'Franklin Gothic Book'),
         plot.subtitle = element_text(face = 'bold', size = 12, family = 'Franklin Gothic Book'),
         legend.position = 'none',
